@@ -18,7 +18,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-primary text-xl">Syngen&trade;</CardTitle>
+          <CardTitle className="text-xl text-primary">Syngen&trade;</CardTitle>
           <CardDescription>Login with your account</CardDescription>
         </CardHeader>
         <CardContent>
@@ -32,7 +32,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                 <div className="grid gap-2">
                   <div className="flex items-center">
                     <Label htmlFor="password">Password</Label>
-                    <div className="text-muted-foreground ml-auto cursor-not-allowed text-sm">
+                    <div className="ml-auto cursor-not-allowed text-sm text-muted-foreground">
                       Forgot your password?
                     </div>
                   </div>
@@ -46,7 +46,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
           </form>
         </CardContent>
       </Card>
-      <div className="text-muted-foreground text-balance text-center text-xs [&_a]:underline [&_a]:underline-offset-4">
+      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4">
         By clicking continue, you agree to our <Link href="#">Terms of Service</Link> and{" "}
         <Link href="#">Privacy Policy</Link>.
       </div>
