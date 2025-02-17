@@ -17,10 +17,10 @@ app.use("/api/v1/auth", authRoutes)
 
 mongoose
   .connect(MONGODB_URI!)
-  .then(() => console.log("Connected to MongoDB."))
+  .then(() => console.log("Connected to MongoDB.\n++++++++++++++++++++++++++++++"))
   .catch((err) => console.error("MongoDB connection error:", err))
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
-  console.log(`http://localhost:${PORT}`)
+  console.log(`URL: http://localhost:${PORT}`)
 })
