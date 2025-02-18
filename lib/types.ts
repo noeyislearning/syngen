@@ -50,3 +50,21 @@ export interface FormFieldContextProps<
 export interface FormItemContextProps {
   id: string
 }
+/**
+ * User
+ */
+export interface UserProps {
+  userId: string
+  email?: string
+}
+export interface UserContextProps {
+  user: UserProps | null
+  setUser: React.Dispatch<React.SetStateAction<UserProps | null>>
+  isLoading: boolean
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
+  login: (userData: UserProps) => void
+  logout: () => void
+}
+export interface UserProviderProps {
+  children: React.ReactNode
+}
