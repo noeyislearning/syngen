@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken"
 import type { JwtPayload, Secret } from "jsonwebtoken"
 
 import type { AuthRequest } from "../lib/types"
-import { JWT_SECRET } from "../lib/constants"
+import { JWT_ACCESS_SECRET } from "../lib/constants"
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const token = req.header("Authorization")?.replace("Bearer ", "")
@@ -15,8 +15,8 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     return
   }
 
-  if (!JWT_SECRET) {
-    console.error("JWT_SECRET is not defined. Authentication middleware cannot function.")
+  if (!JWT_ACCESS_SECRET) {
+    console.error("JWT_ACCESS_SECRET is not defined. Authentication middleware cannot function.")
     res.status(500).json({
       message: "Server configuration error: JWT secret is missing.",
     })
@@ -24,7 +24,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET as Secret) as JwtPayload
+    const decoded = jwt.verify(token, JWT_ACCESS_SECRET as Secret) as JwtPayload
     if (
       typeof decoded === "object" &&
       decoded !== null &&

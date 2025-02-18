@@ -2,18 +2,18 @@ import express from "express"
 import mongoose from "mongoose"
 import cors from "cors"
 
-import authRoutes from "./routes/auth.routes"
 import { MONGODB_URI, PORT } from "./lib/constants"
+
+import authRoutes from "./routes/auth.route"
+import userRoutes from "./routes/user.route"
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-/**
- * Routes
- */
 app.use("/api/v1/auth", authRoutes)
+app.use("/api/v1/user", userRoutes)
 
 mongoose
   .connect(MONGODB_URI!)

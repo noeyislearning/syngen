@@ -1,11 +1,13 @@
 import jwt from "jsonwebtoken"
 
+import { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET } from "../../lib/constants"
 import User from "../../models/user.model"
 
 export const loginService = async (
   email: string,
   password: string,
-): Promise<{ message: string; token: string }> => {
+): Promise<{ message: string; tokens: { access: string; refresh: string } }> => {
+  // Updated return type annotation
   if (!email || !password) {
     throw new Error("Email and password are required.")
   }
@@ -20,8 +22,16 @@ export const loginService = async (
     throw new Error("Invalid credentials.")
   }
 
-  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET as string, {
+  const access = jwt.sign({ userId: user._id }, JWT_ACCESS_SECRET as string, {
     expiresIn: "1h",
   })
-  return { message: "Login successful", token }
+
+  const refresh = jwt.sign(
+    { userId: user._id, tokenType: "refresh" },
+    JWT_REFRESH_SECRET as string,
+    {
+      expiresIn: "7d",
+    },
+  )
+  return { message: "Login successful", tokens: { access, refresh } }
 }

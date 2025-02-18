@@ -7,7 +7,7 @@ export const logoutController = async (req: Request, res: Response): Promise<voi
     const result = await logoutService()
     res.status(200).json(result)
   } catch (error) {
-    console.error(`Logout error: ${error}`)
+    console.error(`[LOGOUT ERROR] ${error}`)
     res.status(500).json({
       message: "Logout failed.",
       error: (error as Error).message,

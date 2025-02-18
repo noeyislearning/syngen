@@ -5,9 +5,18 @@ import User from "../../models/user.model"
 export const registerService = async (
   email: string,
   password: string,
-): Promise<{ message: string }> => {
-  if (!email || !password) {
-    throw new Error("Email and password are required")
+): Promise<{ message: string } | { message: string; errors: Record<string, string> }> => {
+  const errors: Record<string, string> = {}
+
+  if (!email) {
+    errors.email = "Email is required"
+  }
+  if (!password) {
+    errors.password = "Password is required"
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return { message: "Registration failed due to validation errors.", errors }
   }
 
   const existingUser = await User.findOne({ email })
