@@ -30,3 +30,10 @@ export interface SidebarContext {
 export interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {}
+/**
+ * Authentication Forms
+ */
+export interface AuthFormProps {
+  handleToggleSignUp: () => void
+  loading?: boolean
+}
