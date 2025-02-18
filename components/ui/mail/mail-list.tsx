@@ -3,18 +3,18 @@ import { formatDistanceToNow } from "date-fns/formatDistanceToNow"
 
 import { cn } from "@/lib/utils"
 import { Badge, ScrollArea } from "@/components/shared/"
-import { Mail } from "@/data/mails"
+import { MailType } from "@/data/mails"
 import { useMail } from "@/hooks/use-mail"
 
 interface MailListProps {
-  items: Mail[]
+  items: MailType[]
 }
 
 export function MailList({ items }: MailListProps) {
   const [mail, setMail] = useMail()
 
   return (
-    <ScrollArea className="h-screen">
+    <ScrollArea className="h-full">
       <div className="flex flex-col gap-2 p-4 pt-0">
         {items.map((item) => (
           <button

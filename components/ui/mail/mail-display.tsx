@@ -35,10 +35,10 @@ import {
   Calendar,
 } from "@/components/shared/"
 
-import { Mail } from "@/data/mails"
+import type { MailType } from "@/data/mails"
 
 interface MailDisplayProps {
-  mail: Mail | null
+  mail: MailType | null
 }
 
 export function MailDisplay({ mail }: MailDisplayProps) {
