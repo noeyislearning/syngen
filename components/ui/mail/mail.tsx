@@ -17,11 +17,6 @@ import { AccountSwitcher } from "@/components/ui/account-switcher"
 import { TooltipProvider } from "@/components/provider/tooltip-provider"
 
 interface MailProps {
-  accounts: {
-    label: string
-    email: string
-    icon: React.ReactNode
-  }[]
   mails: MailType[]
   navCollapsedSize: number
 }
@@ -81,7 +76,7 @@ export function Mail({ mails }: MailProps) {
               <h1 className="text-xl font-bold">Inbox</h1>
             </div>
             <Separator />
-            <TabsContent value="all" className="m-0 flex-grow overflow-auto py-2">
+            <TabsContent value="all" className="m-0 flex-grow overflow-auto">
               <MailList items={mails} />
             </TabsContent>
           </Tabs>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 
 import { useUser } from "@/hooks/use-user"
 import { Mail } from "@/components/ui/mail/mail"
-import { accounts, mails } from "@/data/mails"
+import { mails } from "@/data/mails"
 
 export default function MailPage() {
   const { user, isLoading } = useUser()
@@ -31,7 +31,7 @@ export default function MailPage() {
 
   return (
     <div className="flex h-screen w-full">
-      <Mail accounts={accounts} mails={mails} navCollapsedSize={4} />
+      <Mail mails={mails} navCollapsedSize={4} />
     </div>
   )
 }
