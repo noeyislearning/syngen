@@ -3,8 +3,14 @@ import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { type VariantProps } from "class-variance-authority"
 import { FieldPath, FieldValues } from "react-hook-form"
 
-import { buttonVariants, sheetVariants } from "@/lib/variants"
+import { buttonVariants, sheetVariants, badgeVariants } from "@/lib/variants"
 
+/**
+ * Badge
+ */
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
 /**
  * Button
  */
