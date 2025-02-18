@@ -2,10 +2,10 @@ import express from "express"
 import mongoose from "mongoose"
 import cors from "cors"
 
-import { MONGODB_URI, PORT } from "./lib/constants"
-
 import authRoutes from "./routes/auth.route"
 import userRoutes from "./routes/user.route"
+
+import { MONGODB_URI, PORT } from "./lib/constants"
 
 const app = express()
 app.use(cors())

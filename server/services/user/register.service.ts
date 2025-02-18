@@ -21,7 +21,10 @@ export const registerService = async (
 
   const existingUser = await User.findOne({ email })
   if (existingUser) {
-    throw new Error("Email already exists.")
+    return {
+      message: "Registration failed due to validation errors.",
+      errors: { email: "Email already exists." },
+    }
   }
 
   const passwordHash = await bcrypt.hash(password, 10)
