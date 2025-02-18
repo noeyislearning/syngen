@@ -171,7 +171,7 @@ export const mails = [
   },
 ]
 
-export type Mail = (typeof mails)[number]
+export type MailType = (typeof mails)[number]
 
 export const accounts = [
   {
