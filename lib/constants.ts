@@ -1,6 +1,10 @@
 import "dotenv/config"
 
 /**
+ * API
+ */
+export const API_URL = process.env.NEXT_PUBLIC_API_URL
+/**
  * Sidebar
  * */
 export const SIDEBAR_COOKIE_NAME = "sidebar:state"

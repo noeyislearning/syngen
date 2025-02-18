@@ -1,6 +1,7 @@
 import * as React from "react"
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { type VariantProps } from "class-variance-authority"
+import { FieldPath, FieldValues } from "react-hook-form"
 
 import { buttonVariants, sheetVariants } from "@/lib/variants"
 
@@ -15,7 +16,7 @@ export interface ButtonProps
 /**
  * Sidebar
  */
-export interface SidebarContext {
+export interface SidebarContextProps {
   state: "expanded" | "collapsed"
   open: boolean
   setOpen: (open: boolean) => void
@@ -36,4 +37,16 @@ export interface SheetContentProps
 export interface AuthFormProps {
   handleToggleSignUp: () => void
   loading?: boolean
+}
+/**
+ * Form Field
+ */
+export interface FormFieldContextProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+> {
+  name: TName
+}
+export interface FormItemContextProps {
+  id: string
 }
