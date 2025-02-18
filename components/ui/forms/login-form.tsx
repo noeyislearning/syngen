@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { AuthFormProps } from "@/lib/types"
+import { AuthFormProps, UserProps } from "@/lib/types"
 import { apiClient } from "@/lib/api"
+import { useUser } from "@/hooks/use-user"
 import { loginSchema, LoginSchemaType } from "@/schemas/login-schema"
 
 import {
@@ -23,6 +24,7 @@ export const LoginForm: React.FC<AuthFormProps> = ({ handleToggleSignUp }) => {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const router = useRouter()
+  const { login } = useUser()
 
   const form = useForm<LoginSchemaType>({
     resolver: zodResolver(loginSchema),
@@ -39,10 +41,10 @@ export const LoginForm: React.FC<AuthFormProps> = ({ handleToggleSignUp }) => {
 
     try {
       const response = await apiClient("/auth/login", "POST", values)
-
       localStorage.setItem("accessToken", response.tokens.access)
       localStorage.setItem("refreshToken", response.tokens.refresh)
-
+      const userData: UserProps = { userId: response.userId, email: values.email }
+      login(userData)
       router.push("/mail")
     } catch (error) {
       if (error instanceof Error) {

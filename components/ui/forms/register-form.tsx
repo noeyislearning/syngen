@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { AuthFormProps } from "@/lib/types"
+import { AuthFormProps, UserProps } from "@/lib/types"
 import { apiClient } from "@/lib/api"
+import { useUser } from "@/hooks/use-user"
 import { registerSchema, RegisterSchemaType } from "@/schemas/register-schema"
 
 import {
@@ -23,6 +24,7 @@ export const RegisterForm: React.FC<AuthFormProps> = ({ handleToggleSignUp }) =>
   const [loading, setLoading] = React.useState(false)
   const [error, setErrors] = React.useState<Record<string, string> | null>(null)
   const router = useRouter()
+  const { login } = useUser()
 
   const form = useForm<RegisterSchemaType>({
     resolver: zodResolver(registerSchema),
@@ -41,8 +43,9 @@ export const RegisterForm: React.FC<AuthFormProps> = ({ handleToggleSignUp }) =>
     const payload = { email: values.email, password: values.password }
 
     try {
-      await apiClient("/user/register", "POST", payload)
-
+      const response = await apiClient("/user/register", "POST", payload)
+      const userData: UserProps = { userId: response.userId, email: values.email }
+      login(userData)
       router.push("/")
     } catch (err: unknown) {
       console.error("Registration Failed", err)
@@ -59,7 +62,7 @@ export const RegisterForm: React.FC<AuthFormProps> = ({ handleToggleSignUp }) =>
       } else if (err instanceof Error) {
         setErrors({ form: err.message || "Registration failed. Please try again." })
       } else {
-        setErrors({ form: "Registration failed. An unexpected error occurred." }) // Handle cases where err is not an Error object
+        setErrors({ form: "Registration failed. An unexpected error occurred." })
       }
     } finally {
       setLoading(false)
