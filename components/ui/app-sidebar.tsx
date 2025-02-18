@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ArchiveX, Command, File, Inbox, Send, Trash2 } from "lucide-react"
+import { Command, Inbox, Send } from "lucide-react"
 
 import { useSidebar } from "@/hooks/use-sidebar"
 
@@ -23,7 +23,6 @@ const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
     {
@@ -33,27 +32,9 @@ const data = {
       isActive: true,
     },
     {
-      title: "Drafts",
-      url: "#",
-      icon: File,
-      isActive: false,
-    },
-    {
       title: "Sent",
       url: "#",
       icon: Send,
-      isActive: false,
-    },
-    {
-      title: "Junk",
-      url: "#",
-      icon: ArchiveX,
-      isActive: false,
-    },
-    {
-      title: "Trash",
-      url: "#",
-      icon: Trash2,
       isActive: false,
     },
   ],
