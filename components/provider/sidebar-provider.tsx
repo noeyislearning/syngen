@@ -10,7 +10,7 @@ import {
   SIDEBAR_WIDTH,
   SIDEBAR_WIDTH_ICON,
 } from "@/lib/constants"
-import { SidebarContext as Context } from "@/lib/types"
+import { SidebarContextProps } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 import { SidebarContext } from "@/components/context/sidebar-context"
@@ -73,7 +73,7 @@ export const SidebarProvider = React.forwardRef<
 
     const state = open ? "expanded" : "collapsed"
 
-    const contextValue = React.useMemo<Context>(
+    const contextValue = React.useMemo<SidebarContextProps>(
       () => ({
         state,
         open,
@@ -98,7 +98,7 @@ export const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              "group/sidebar-wrapper has-[[data-variant=inset]]:bg-sidebar flex min-h-svh w-full",
+              "group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar",
               className,
             )}
             ref={ref}
