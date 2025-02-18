@@ -6,7 +6,7 @@ import { metadata as SiteData } from "@/lib/metadata"
 
 export const metadata: Metadata = SiteData
 
-import { ThemeProvider } from "@/components/providers/theme-provider"
+import { ThemeProvider } from "@/components/provider/theme-provider"
 
 export default function RootLayout({
   children,
