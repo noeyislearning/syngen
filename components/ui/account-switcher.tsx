@@ -1,48 +1,54 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
+import { LogOut } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shared/"
+import { useUser } from "@/hooks/use-user"
+import { Select, SelectContent, SelectTrigger, SelectItem, SelectValue } from "@/components/shared/"
 
 interface AccountSwitcherProps {
   isCollapsed: boolean
-  accounts: {
-    label: string
-    email: string
-    icon: React.ReactNode
-  }[]
+  userEmail?: string | null
 }
 
-export function AccountSwitcher({ isCollapsed, accounts }: AccountSwitcherProps) {
-  const [selectedAccount, setSelectedAccount] = React.useState<string>(accounts[0].email)
+export function AccountSwitcher({ isCollapsed, userEmail }: AccountSwitcherProps) {
+  const { logout } = useUser()
+  const router = useRouter()
+
+  const handleLogout = () => {
+    logout()
+    router.push("/")
+  }
+
+  const handleValueChange = (value: string) => {
+    if (value === "logout") {
+      handleLogout()
+    }
+  }
 
   return (
-    <Select defaultValue={selectedAccount} onValueChange={setSelectedAccount}>
+    <Select onValueChange={handleValueChange}>
       <SelectTrigger
         className={cn(
           "flex items-center gap-2 [&>span]:line-clamp-1 [&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:gap-1 [&>span]:truncate [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0",
           isCollapsed &&
             "flex h-9 w-9 shrink-0 items-center justify-center p-0 [&>span]:w-auto [&>svg]:hidden",
         )}
-        aria-label="Select account"
+        aria-label="User menu"
       >
-        <SelectValue placeholder="Select an account">
-          {accounts.find((account) => account.email === selectedAccount)?.icon}
-          <span className={cn("ml-2", isCollapsed && "hidden")}>
-            {accounts.find((account) => account.email === selectedAccount)?.label}
-          </span>
+        <SelectValue placeholder={userEmail}>
+          <span className={cn("ml-0", isCollapsed && "hidden")}>{userEmail}</span>
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {accounts.map((account) => (
-          <SelectItem key={account.email} value={account.email}>
-            <div className="flex items-center gap-3 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0 [&_svg]:text-foreground">
-              {account.icon}
-              {account.email}
-            </div>
-          </SelectItem>
-        ))}
+        <SelectItem value="logout" className="cursor-pointer">
+          <div className="flex items-center gap-3 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0 [&_svg]:text-foreground">
+            <LogOut />
+            Logout
+          </div>
+        </SelectItem>
       </SelectContent>
     </Select>
   )

@@ -1,17 +1,18 @@
 "use client"
 
 import * as React from "react"
-import { Archive, ArchiveX, File, Inbox, Search, Send, Trash2 } from "lucide-react"
+import { Inbox, Send, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { type MailType } from "@/data/mails"
 import { useMail } from "@/hooks/use-mail"
+import { useUser } from "@/hooks/use-user"
 
-import { Input, Separator, Tabs, TabsContent } from "@/components/shared/"
-import { AccountSwitcher } from "@/components/ui/account-switcher"
+import { Separator, Tabs, TabsContent } from "@/components/shared/"
 import { MailDisplay } from "@/components/ui/mail/mail-display"
 import { MailList } from "@/components/ui/mail/mail-list"
 import { Nav } from "@/components/ui/nav"
+import { AccountSwitcher } from "@/components/ui/account-switcher"
 
 import { TooltipProvider } from "@/components/provider/tooltip-provider"
 
@@ -25,9 +26,10 @@ interface MailProps {
   navCollapsedSize: number
 }
 
-export function Mail({ accounts, mails }: MailProps) {
+export function Mail({ mails }: MailProps) {
   const [isCollapsed] = React.useState(false)
   const [mail] = useMail()
+  const { user } = useUser()
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -45,8 +47,9 @@ export function Mail({ accounts, mails }: MailProps) {
               isCollapsed ? "h-[52px]" : "px-2",
             )}
           >
-            <AccountSwitcher isCollapsed={isCollapsed} accounts={accounts} />
+            <AccountSwitcher isCollapsed={isCollapsed} userEmail={user?.email} />
           </div>
+
           <Separator />
           <Nav
             isCollapsed={isCollapsed}
@@ -58,33 +61,15 @@ export function Mail({ accounts, mails }: MailProps) {
                 variant: "default",
               },
               {
-                title: "Drafts",
-                label: "9",
-                icon: File,
-                variant: "ghost",
-              },
-              {
                 title: "Sent",
                 label: "",
                 icon: Send,
                 variant: "ghost",
               },
               {
-                title: "Junk",
-                label: "23",
-                icon: ArchiveX,
-                variant: "ghost",
-              },
-              {
                 title: "Trash",
                 label: "",
                 icon: Trash2,
-                variant: "ghost",
-              },
-              {
-                title: "Archive",
-                label: "",
-                icon: Archive,
                 variant: "ghost",
               },
             ]}
@@ -96,15 +81,7 @@ export function Mail({ accounts, mails }: MailProps) {
               <h1 className="text-xl font-bold">Inbox</h1>
             </div>
             <Separator />
-            <div className="bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <form>
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search" className="pl-8" />
-                </div>
-              </form>
-            </div>
-            <TabsContent value="all" className="m-0 overflow-auto">
+            <TabsContent value="all" className="m-0 flex-grow overflow-auto py-2">
               <MailList items={mails} />
             </TabsContent>
           </Tabs>

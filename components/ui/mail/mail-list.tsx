@@ -1,8 +1,7 @@
-import { ComponentProps } from "react"
 import { formatDistanceToNow } from "date-fns/formatDistanceToNow"
 
 import { cn } from "@/lib/utils"
-import { Badge, ScrollArea } from "@/components/shared/"
+import { ScrollArea } from "@/components/shared/"
 import { MailType } from "@/data/mails"
 import { useMail } from "@/hooks/use-mail"
 
@@ -52,30 +51,9 @@ export function MailList({ items }: MailListProps) {
             <div className="line-clamp-2 text-xs text-muted-foreground">
               {item.text.substring(0, 300)}
             </div>
-            {item.labels.length ? (
-              <div className="flex items-center gap-2">
-                {item.labels.map((label) => (
-                  <Badge key={label} variant={getBadgeVariantFromLabel(label)}>
-                    {label}
-                  </Badge>
-                ))}
-              </div>
-            ) : null}
           </button>
         ))}
       </div>
     </ScrollArea>
   )
-}
-
-function getBadgeVariantFromLabel(label: string): ComponentProps<typeof Badge>["variant"] {
-  if (["work"].includes(label.toLowerCase())) {
-    return "default"
-  }
-
-  if (["personal"].includes(label.toLowerCase())) {
-    return "outline"
-  }
-
-  return "secondary"
 }
