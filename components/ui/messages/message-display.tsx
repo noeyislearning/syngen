@@ -1,6 +1,6 @@
 "use client"
 
-import { format } from "date-fns/format"
+import { format, isToday, isYesterday } from "date-fns"
 import * as React from "react"
 import { MailIcon, PhoneCall, MessageSquareIcon } from "lucide-react"
 import { io } from "socket.io-client"
@@ -19,8 +19,12 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  Label,
-  Switch,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/shared/"
 import { MessageTypeProps } from "@/lib/types"
 
@@ -37,7 +41,7 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
   const [chatMessages, setChatMessages] = React.useState<MessageTypeProps["messages"]>([])
   const [socket, setSocket] = React.useState<ReturnType<typeof io> | null>(null)
   const [messageText, setMessageText] = React.useState("")
-  const [isEmailFilterOn, setIsEmailFilterOn] = React.useState(false)
+  const [messageFilter, setMessageFilter] = React.useState<string>("chat")
 
   const messagesEndRef = React.useRef<HTMLDivElement | null>(null)
 
@@ -45,9 +49,41 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
+  const filteredMessages = React.useMemo(() => {
+    if (!message?.messages) return []
+
+    let messagesToSort = []
+    if (messageFilter === "email") {
+      messagesToSort = message.messages.filter((msg) => msg.messageType === "email")
+    } else if (messageFilter === "chat") {
+      messagesToSort = chatMessages
+    } else if (messageFilter === "sms") {
+      messagesToSort = message.messages.filter((msg) => msg.messageType === "sms")
+    } else {
+      messagesToSort = chatMessages
+    }
+
+    messagesToSort.sort((a, b) => {
+      const dateA = a.date ? new Date(a.date) : null
+      const dateB = b.date ? new Date(b.date) : null
+
+      if (!dateA && !dateB) return 0
+      if (!dateA) return 1
+      if (!dateB) return -1
+
+      return dateA.getTime() - dateB.getTime()
+    })
+
+    return messagesToSort
+  }, [messageFilter, message?.messages, chatMessages])
+
   React.useEffect(() => {
     scrollToBottom()
   }, [chatMessages])
+
+  React.useEffect(() => {
+    scrollToBottom()
+  }, [filteredMessages])
 
   React.useEffect(() => {
     if (message?.messages) {
@@ -137,29 +173,17 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
     console.log("Message text cleared, emit complete")
   }
 
-  const filteredMessages = React.useMemo(() => {
-    if (!message?.messages) return []
-
-    let messagesToSort = []
-    if (isEmailFilterOn) {
-      messagesToSort = message.messages.filter((msg) => msg.messageType === "email")
+  const formatDateDisplay = (dateString: string | undefined) => {
+    if (!dateString) return "N/A"
+    const date = new Date(dateString)
+    if (isToday(date)) {
+      return format(date, "pp") // Only time for today
+    } else if (isYesterday(date)) {
+      return "Yesterday" // "Yesterday" for yesterday
     } else {
-      messagesToSort = chatMessages
+      return format(date, "MMM d, yyyy") // Month day and year for older dates
     }
-
-    messagesToSort.sort((a, b) => {
-      const dateA = a.date ? new Date(a.date) : null
-      const dateB = b.date ? new Date(b.date) : null
-
-      if (!dateA && !dateB) return 0
-      if (!dateA) return 1
-      if (!dateB) return -1
-
-      return dateA.getTime() - dateB.getTime()
-    })
-
-    return messagesToSort
-  }, [isEmailFilterOn, message?.messages, chatMessages])
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -179,25 +203,38 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
           </div>
         ) : (
           <>
-            <div className="mb-4 flex items-start gap-2 text-sm">
-              <Avatar>
-                <AvatarFallback className="uppercase">
-                  {message.from
-                    .split(" ")
-                    .map((chunk) => chunk[0])
-                    .join("")}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid">
-                <div className="font-semibold">{message.from}</div>
-                <div className="text-muted-foreground">Phone: {message.phoneNumber}</div>
+            <div className="flex w-full flex-row items-center justify-between">
+              <div className="flex items-start gap-2 text-sm">
+                <Avatar>
+                  <AvatarFallback className="uppercase">
+                    {message.from
+                      .split(" ")
+                      .map((chunk) => chunk[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid">
+                  <div className="font-semibold">{message.from}</div>
+                  <div className="text-muted-foreground">Phone: {message.phoneNumber}</div>
+                </div>
               </div>
+              <Select onValueChange={setMessageFilter} value={messageFilter}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Message Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="chat">Chat</SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="sms">SMS</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
-            <Separator />
-            <div className="mt-4 flex flex-col gap-4 overflow-auto">
+            <div className="mt-6 flex flex-col gap-4 overflow-auto">
               {filteredMessages.map((msg) => (
                 <div key={msg.id}>
-                  {msg.messageType === "email" && isEmailFilterOn ? (
+                  {msg.messageType === "email" && messageFilter === "email" ? (
                     <div
                       className={`relative flex ${
                         msg.isSender ? "ml-auto justify-end" : "justify-start"
@@ -217,22 +254,22 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
                               {msg.isSender ? (
                                 <div className="flex flex-row items-center justify-end gap-2">
                                   <p className="font-bold">{msg.subject}</p>
-                                  <MailIcon className="h-4 w-4 text-blue-600" />
                                 </div>
                               ) : (
                                 <div className="flex flex-row items-center gap-2">
-                                  <MailIcon className="h-4 w-4 text-blue-600" />
                                   <p className="font-bold">{msg.subject}</p>
                                 </div>
                               )}
                               <p className="line-clamp-2">{msg.text.substring(0, 300)}</p>
                               {msg.isSender ? (
-                                <div className="text-end text-xs text-muted-foreground">
-                                  {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                                <div className="flex flex-row items-center justify-end gap-2 text-end text-xs text-muted-foreground">
+                                  {formatDateDisplay(msg.date)}
+                                  <MailIcon className="h-4 w-4 text-blue-600" />
                                 </div>
                               ) : (
                                 <span className="text-xs text-muted-foreground">
-                                  {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                                  <MailIcon className="h-4 w-4 text-blue-600" />
+                                  {formatDateDisplay(msg.date)}
                                 </span>
                               )}
                             </div>
@@ -244,7 +281,7 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
                             <DialogDescription>
                               {msg.isSender ? `To: ${message.from}` : `From: ${message.from}`}
                               <br />
-                              Date: {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                              Date: {formatDateDisplay(msg.date)}
                             </DialogDescription>
                           </DialogHeader>
                           <div className="whitespace-pre-wrap py-4">{msg.text}</div>
@@ -257,33 +294,62 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
                         </DialogContent>
                       </Dialog>
                     </div>
-                  ) : msg.messageType === "chat" && !isEmailFilterOn ? (
+                  ) : msg.messageType === "chat" && messageFilter === "chat" ? (
                     <div
                       key={msg.id}
                       className={`flex w-fit max-w-fit ${
                         msg.isSender ? "ml-auto justify-end" : "justify-start"
                       }`}
                     >
-                      <div className="flex flex-col gap-1 rounded-md bg-muted p-3">
+                      <div className="flex max-w-xs flex-col gap-1 rounded-md bg-muted p-3">
                         {msg.isSender ? (
                           <div className="flex items-center justify-end gap-2">
                             <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
-                            <MessageSquareIcon className="h-4 w-4 text-cyan-600" />
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
                             <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
                           </div>
                         )}
-
                         {msg.isSender ? (
-                          <div className="text-end text-xs text-muted-foreground">
-                            {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                          <div className="flex items-center justify-end gap-2 text-end text-xs text-muted-foreground">
+                            {formatDateDisplay(msg.date)}
+                            <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
                           </div>
                         ) : (
-                          <div className="text-xs text-muted-foreground">
-                            {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
+                            {formatDateDisplay(msg.date)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : msg.messageType === "sms" && messageFilter === "sms" ? (
+                    <div
+                      key={msg.id}
+                      className={`flex w-fit max-w-fit ${
+                        msg.isSender ? "ml-auto justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div className="flex max-w-xs flex-col gap-1 rounded-md bg-muted p-3">
+                        {msg.isSender ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
+                          </div>
+                        )}
+                        {msg.isSender ? (
+                          <div className="flex items-center justify-end gap-2 text-end text-xs text-muted-foreground">
+                            {formatDateDisplay(msg.date)}
+                            <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
+                            {formatDateDisplay(msg.date)}
                           </div>
                         )}
                       </div>
@@ -308,18 +374,6 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
                 onChange={(e) => setMessageText(e.target.value)}
               />
               <div className="flex items-center">
-                <Label
-                  htmlFor="email-filter"
-                  className="flex items-center gap-2 text-xs font-normal"
-                >
-                  <Switch
-                    id="email-filter"
-                    aria-label="Show Emails"
-                    checked={isEmailFilterOn}
-                    onCheckedChange={setIsEmailFilterOn}
-                  />{" "}
-                  Show Emails
-                </Label>
                 <Button size="sm" className="ml-auto" type="submit">
                   Send
                 </Button>
