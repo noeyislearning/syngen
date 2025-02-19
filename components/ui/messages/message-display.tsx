@@ -101,7 +101,8 @@ export function MessageDisplay({ message }: MessageDisplayProps) {
                         <DialogHeader>
                           <DialogTitle>{msg.subject}</DialogTitle>
                           <DialogDescription>
-                            From: {message.from}
+                            {/* ✅ Conditionally display "From" or "To" based on msg.isSender */}
+                            {msg.isSender ? `To: ${message.from}` : `From: ${message.from}`}
                             <br />
                             Date: {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
                           </DialogDescription>
