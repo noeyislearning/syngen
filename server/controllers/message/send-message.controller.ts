@@ -6,6 +6,7 @@ import ChatMessage from "../../models/message.model"
 import type { MessagePayload, SendMessageRequest, IMessage } from "../../lib/types"
 
 export const handleMessage = async (socket: Socket, io: Server, payload: MessagePayload) => {
+  console.log("Server handleMessage function called:", payload)
   try {
     const { senderId, receiverId, text } = payload
 
@@ -16,18 +17,49 @@ export const handleMessage = async (socket: Socket, io: Server, payload: Message
     })
     await chatMessage.save()
 
-    io.to(receiverId).emit("chatMessage", {
-      senderId,
-      receiverId,
-      text,
-      timestamp: chatMessage.timestamp.toISOString(),
-    })
-    io.to(senderId).emit("chatMessage", {
-      senderId,
-      receiverId,
-      text,
-      timestamp: chatMessage.timestamp.toISOString(),
-    })
+    const socketIdMap = io.of("/").sockets
+
+    const receiverSocket = Array.from(socketIdMap.values()).find(
+      (s: Socket) => s.handshake.query.userId === receiverId,
+    )
+    const senderSocket = Array.from(socketIdMap.values()).find(
+      (s: Socket) => s.handshake.query.userId === senderId,
+    )
+
+    if (receiverSocket) {
+      console.log("Server Emitting to receiver (socketId):", receiverSocket.id, "payload:", {
+        senderId,
+        receiverId,
+        text,
+        timestamp: chatMessage.timestamp.toISOString(),
+      })
+      receiverSocket.emit("chatMessage", {
+        senderId,
+        receiverId,
+        text,
+        timestamp: chatMessage.timestamp.toISOString(),
+      })
+    } else {
+      console.log(`Receiver socket for userId ${receiverId} not found.`)
+    }
+
+    if (senderSocket) {
+      console.log("Server Emitting to sender (socketId):", senderSocket.id, "payload:", {
+        senderId,
+        receiverId,
+        text,
+        timestamp: chatMessage.timestamp.toISOString(),
+      })
+      senderSocket.emit("chatMessage", {
+        // Emit to sender's socket
+        senderId,
+        receiverId,
+        text,
+        timestamp: chatMessage.timestamp.toISOString(),
+      })
+    } else {
+      console.log(`Sender socket for userId ${senderId} not found.`)
+    }
 
     console.log("Chat message saved and broadcasted:", chatMessage)
   } catch (error) {
