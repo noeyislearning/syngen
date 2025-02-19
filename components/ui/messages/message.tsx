@@ -1,3 +1,4 @@
+// components/message.tsx
 "use client"
 
 import * as React from "react"
@@ -6,7 +7,7 @@ import { Inbox, Send, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { type MessageType } from "@/data/messages"
 import { useMail } from "@/hooks/use-mail"
-// import { useUser } from "@/hooks/use-user" // Remove useUser import - not needed here
+import { useUser } from "@/hooks/use-user"
 
 import { Separator, Tabs, TabsContent } from "@/components/shared/"
 import { MessageDisplay } from "@/components/ui/messages/message-display"
@@ -24,19 +25,7 @@ interface MessageProps {
 export function Message({ messages }: MessageProps) {
   const [isCollapsed] = React.useState(false)
   const [mail] = useMail()
-  // const { user } = useUser() // Remove useUser hook - not needed for this filtering
-
-  // Hardcode the userId for now - to test if filtering works.
-  const staticUserIdToFilter = "user-1" // Or try "user-2" or any userId from your data.
-
-  const flattenedMessages = React.useMemo(() => {
-    return messages.reduce<MessageType["messages"]>(
-      (acc, userMessages) => {
-        return [...acc, ...userMessages.messages]
-      },
-      [] as MessageType["messages"],
-    )
-  }, [messages])
+  const { user } = useUser()
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -54,8 +43,7 @@ export function Message({ messages }: MessageProps) {
               isCollapsed ? "h-[52px]" : "px-2",
             )}
           >
-            <AccountSwitcher isCollapsed={isCollapsed} userEmail={"test@example.com"} />{" "}
-            {/* You can remove userEmail prop if not needed here anymore */}
+            <AccountSwitcher isCollapsed={isCollapsed} userEmail={user?.email} />
           </div>
 
           <Separator />
@@ -90,15 +78,12 @@ export function Message({ messages }: MessageProps) {
             </div>
             <Separator />
             <TabsContent value="all" className="m-0 flex-grow overflow-auto">
-              <MessageList items={messages} userId={staticUserIdToFilter} />{" "}
-              {/* Pass hardcoded userId */}
+              <MessageList items={messages} />
             </TabsContent>
           </Tabs>
         </div>
         <div className="w-full">
-          <MessageDisplay
-            message={flattenedMessages.find((item) => item.id === mail.selected) || null}
-          />
+          <MessageDisplay message={mail.selectedSender || null} />{" "}
         </div>
       </div>
     </TooltipProvider>
