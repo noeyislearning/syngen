@@ -84,7 +84,7 @@ export const getMessagesService = async (userId: string) => {
     const messageList = Object.values(groupedMessages) as MessageType[]
     return messageList
   } catch (error) {
-    console.error("Error in getInboxMessagesService:", error)
-    throw new Error("Failed to fetch inbox messages.")
+    console.error("Error in getMessagesService:", error)
+    throw new Error("Failed to fetch messages.")
   }
 }
