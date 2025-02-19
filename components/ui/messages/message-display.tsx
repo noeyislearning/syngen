@@ -42,14 +42,11 @@ export function MessageDisplay({ message }: MessageDisplayProps) {
       </div>
       <Separator />
       <div className="flex flex-1 flex-col p-4">
-        {/* ✅ Conditional rendering for content based on 'message' prop */}
         {!message ? (
-          // Rendered when NO message is selected
           <div className="flex h-full items-center justify-center">
             <div className="text-center text-muted-foreground">No sender selected</div>
           </div>
         ) : (
-          // Rendered when a message IS selected
           <>
             <div className="mb-4 flex items-start gap-4 text-sm">
               <Avatar>
@@ -89,14 +86,27 @@ export function MessageDisplay({ message }: MessageDisplayProps) {
                           <div className="flex w-fit max-w-fit flex-row items-start gap-1">
                             <DialogTrigger asChild>
                               <div className="w-full cursor-pointer whitespace-pre-wrap border border-muted p-3 text-sm">
-                                <div className="flex flex-row items-center gap-2">
-                                  <MailIcon className="h-4 w-4 text-blue-600" />
-                                  <p className="font-bold">Subject: {msg.subject}</p>
-                                </div>
+                                {msg.isSender ? (
+                                  <div className="flex flex-row items-center justify-end gap-2">
+                                    <p className="font-bold">{msg.subject}</p>
+                                    <MailIcon className="h-4 w-4 text-blue-600" />
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-row items-center gap-2">
+                                    <MailIcon className="h-4 w-4 text-blue-600" />
+                                    <p className="font-bold">{msg.subject}</p>
+                                  </div>
+                                )}
                                 <p className="line-clamp-2">{msg.text.substring(0, 300)}</p>
-                                <span className="text-xs text-muted-foreground">
-                                  {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
-                                </span>
+                                {msg.isSender ? (
+                                  <div className="text-end text-xs text-muted-foreground">
+                                    {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">
+                                    {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                                  </span>
+                                )}
                               </div>
                             </DialogTrigger>
                           </div>
@@ -130,13 +140,27 @@ export function MessageDisplay({ message }: MessageDisplayProps) {
                         }`}
                       >
                         <div className="flex flex-col gap-1 rounded-md bg-muted p-3">
-                          <div className="flex items-center gap-1">
-                            <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
-                            <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
-                          </div>
+                          {msg.isSender ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
+                              <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
+                              <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
+                            </div>
+                          )}
+
+                          {msg.isSender ? (
+                            <div className="text-end text-xs text-muted-foreground">
+                              {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-muted-foreground">
+                              {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ) : null}

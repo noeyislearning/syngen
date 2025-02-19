@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Inbox, Send, Trash2 } from "lucide-react"
+import { Inbox } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { MessageTypeProps } from "@/lib/types"
@@ -25,6 +25,9 @@ export function Message({ messages }: MessageProps) {
   const [isCollapsed] = React.useState(false)
   const { user } = useUser()
   const [mail] = useMail()
+
+  // ✅ Calculate the number of conversations
+  const conversationCount = messages ? messages.length : 0
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -51,21 +54,9 @@ export function Message({ messages }: MessageProps) {
             links={[
               {
                 title: "Inbox",
-                label: "128",
+                label: conversationCount.toString(),
                 icon: Inbox,
                 variant: "default",
-              },
-              {
-                title: "Sent",
-                label: "",
-                icon: Send,
-                variant: "ghost",
-              },
-              {
-                title: "Trash",
-                label: "",
-                icon: Trash2,
-                variant: "ghost",
               },
             ]}
           />
