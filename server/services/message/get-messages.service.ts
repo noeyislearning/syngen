@@ -12,12 +12,12 @@ export const getMessagesService = async (userId: string) => {
     })
       .populate({
         path: "senderId",
-        select: "email from",
+        select: "email from phoneNumber",
         model: User,
       })
       .populate({
         path: "receiverId",
-        select: "email from",
+        select: "email from phoneNumber",
         model: User,
       })
       .sort({ timestamp: -1 })
@@ -50,12 +50,14 @@ export const getMessagesService = async (userId: string) => {
         const otherUserFrom =
           senderId === userId ? receiver.from || receiver.email : sender.from || sender.email
         const otherUserEmail = senderId === userId ? receiver.email : sender.email
+        const otherUserPhoneNumber = senderId === userId ? receiver.phoneNumber : sender.phoneNumber
 
         if (!acc[otherUserId]) {
           acc[otherUserId] = {
             userId: otherUserId,
             from: otherUserFrom,
             email: otherUserEmail,
+            phoneNumber: otherUserPhoneNumber || "N/A",
             messages: [],
           }
         }

@@ -5,7 +5,7 @@ import User from "../../models/user.model"
 export const registerService = async (
   email: string,
   password: string,
-  phoneNumber: string, // ADDED PHONE NUMBER PARAMETER
+  phoneNumber: string,
 ): Promise<{ message: string } | { message: string; errors: Record<string, string> }> => {
   const errors: Record<string, string> = {}
 

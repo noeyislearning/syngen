@@ -65,5 +65,6 @@ export interface MessageType {
   userId: string
   from: string
   email: string
+  phoneNumber: string
   messages: MessageDetail[]
 }

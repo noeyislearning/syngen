@@ -3,7 +3,7 @@ import { Socket, Server } from "socket.io"
 
 import ChatMessage from "../../models/message.model"
 
-import type { MessagePayload, SendMessageRequest, IChatMessage } from "../../lib/types"
+import type { MessagePayload, SendMessageRequest, IMessage } from "../../lib/types"
 
 export const handleMessage = async (socket: Socket, io: Server, payload: MessagePayload) => {
   try {
@@ -56,12 +56,12 @@ export const sendMessageController = async (
       return
     }
 
-    const newMessage: IChatMessage = new ChatMessage({
+    const newMessage: IMessage = new ChatMessage({
       senderId,
       receiverId,
       messageType,
       text,
-      subject: messageType === "email" ? subject : null, // Store subject only for emails
+      subject: messageType === "email" ? subject : null,
     })
 
     await newMessage.save()
