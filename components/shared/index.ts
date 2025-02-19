@@ -169,3 +169,16 @@ export { Tabs } from "./tabs/tabs"
 export { TabsList } from "./tabs/tabs-list"
 export { TabsTrigger } from "./tabs/tabs-trigger"
 export { TabsContent } from "./tabs/tabs-content"
+/**
+ * Dialog
+ */
+export { Dialog } from "./dialog/dialog"
+export { DialogPortal } from "./dialog/dialog-portal"
+export { DialogOverlay } from "./dialog/dialog-overlay"
+export { DialogTrigger } from "./dialog/dialog-trigger"
+export { DialogClose } from "./dialog/dialog-close"
+export { DialogContent } from "./dialog/dialog-content"
+export { DialogHeader } from "./dialog/dialog-header"
+export { DialogFooter } from "./dialog/dialog-footer.tsx"
+export { DialogTitle } from "./dialog/dialog-title"
+export { DialogDescription } from "./dialog/dialog-description"

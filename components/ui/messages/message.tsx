@@ -4,27 +4,39 @@ import * as React from "react"
 import { Inbox, Send, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { type MailType } from "@/data/mails"
+import { type MessageType } from "@/data/messages"
 import { useMail } from "@/hooks/use-mail"
-import { useUser } from "@/hooks/use-user"
+// import { useUser } from "@/hooks/use-user" // Remove useUser import - not needed here
 
 import { Separator, Tabs, TabsContent } from "@/components/shared/"
-import { MailDisplay } from "@/components/ui/mail/mail-display"
-import { MailList } from "@/components/ui/mail/mail-list"
+import { MessageDisplay } from "@/components/ui/messages/message-display"
+import { MessageList } from "@/components/ui/messages/message-list"
 import { Nav } from "@/components/ui/nav"
 import { AccountSwitcher } from "@/components/ui/account-switcher"
 
 import { TooltipProvider } from "@/components/provider/tooltip-provider"
 
-interface MailProps {
-  mails: MailType[]
+interface MessageProps {
+  messages: MessageType[]
   navCollapsedSize: number
 }
 
-export function Mail({ mails }: MailProps) {
+export function Message({ messages }: MessageProps) {
   const [isCollapsed] = React.useState(false)
   const [mail] = useMail()
-  const { user } = useUser()
+  // const { user } = useUser() // Remove useUser hook - not needed for this filtering
+
+  // Hardcode the userId for now - to test if filtering works.
+  const staticUserIdToFilter = "user-1" // Or try "user-2" or any userId from your data.
+
+  const flattenedMessages = React.useMemo(() => {
+    return messages.reduce<MessageType["messages"]>(
+      (acc, userMessages) => {
+        return [...acc, ...userMessages.messages]
+      },
+      [] as MessageType["messages"],
+    )
+  }, [messages])
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -42,7 +54,8 @@ export function Mail({ mails }: MailProps) {
               isCollapsed ? "h-[52px]" : "px-2",
             )}
           >
-            <AccountSwitcher isCollapsed={isCollapsed} userEmail={user?.email} />
+            <AccountSwitcher isCollapsed={isCollapsed} userEmail={"test@example.com"} />{" "}
+            {/* You can remove userEmail prop if not needed here anymore */}
           </div>
 
           <Separator />
@@ -77,12 +90,15 @@ export function Mail({ mails }: MailProps) {
             </div>
             <Separator />
             <TabsContent value="all" className="m-0 flex-grow overflow-auto">
-              <MailList items={mails} />
+              <MessageList items={messages} userId={staticUserIdToFilter} />{" "}
+              {/* Pass hardcoded userId */}
             </TabsContent>
           </Tabs>
         </div>
         <div className="w-full">
-          <MailDisplay mail={mails.find((item) => item.id === mail.selected) || null} />
+          <MessageDisplay
+            message={flattenedMessages.find((item) => item.id === mail.selected) || null}
+          />
         </div>
       </div>
     </TooltipProvider>

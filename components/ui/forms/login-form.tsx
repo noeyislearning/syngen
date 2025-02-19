@@ -45,7 +45,7 @@ export const LoginForm: React.FC<AuthFormProps> = ({ handleToggleSignUp }) => {
       localStorage.setItem("refreshToken", response.tokens.refresh)
       const userData: UserProps = { userId: response.userId, email: values.email }
       login(userData)
-      router.push("/mail")
+      router.push("/message")
     } catch (error) {
       if (error instanceof Error) {
         setError((error as Error).message || "Login failed. Please check your credentials.")
