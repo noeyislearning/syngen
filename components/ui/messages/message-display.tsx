@@ -2,7 +2,7 @@
 
 import { format } from "date-fns/format"
 import * as React from "react"
-import { MailIcon, PhoneCall, MessageSquareIcon } from "lucide-react"
+import { MailIcon, PhoneCall, MessageSquareIcon, MoreVertical } from "lucide-react" // Import MoreVertical icon
 
 import {
   Avatar,
@@ -18,6 +18,10 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
 } from "@/components/shared/"
 import type { MessageType } from "@/data/messages"
 
@@ -28,12 +32,21 @@ interface MessageDisplayProps {
 type SelectedEmailMessageType = MessageType["messages"][number] | null
 
 export function MessageDisplay({ message }: MessageDisplayProps) {
-  // Explicitly type selectedEmailMessage state
   const [selectedEmailMessage, setSelectedEmailMessage] =
     React.useState<SelectedEmailMessageType>(null)
 
   if (!message) {
     return <div className="p-8 text-center text-muted-foreground">No sender selected</div>
+  }
+
+  const handleReply = (messageId: string) => {
+    console.log(`Reply to message ID: ${messageId}`)
+    // Implement your reply logic here
+  }
+
+  const handleRemove = (messageId: string) => {
+    console.log(`Remove message ID: ${messageId}`)
+    // Implement your remove logic here
   }
 
   return (
@@ -68,52 +81,89 @@ export function MessageDisplay({ message }: MessageDisplayProps) {
           {message.messages.map((msg) => (
             <React.Fragment key={msg.id}>
               {msg.messageType === "email" ? (
-                <Dialog
-                  open={selectedEmailMessage?.id === msg.id}
-                  onOpenChange={(open) =>
-                    open
-                      ? setSelectedEmailMessage(msg as SelectedEmailMessageType)
-                      : setSelectedEmailMessage(null)
-                  }
-                >
-                  <div className="flex w-2/3 flex-col items-start gap-1">
-                    <DialogTrigger asChild>
-                      <div className="w-fit max-w-[70%] cursor-pointer whitespace-pre-wrap border border-muted p-3 text-sm">
-                        <div className="flex flex-row items-center gap-2">
-                          <MailIcon className="h-4 w-4 text-blue-600" />
-                          <p className="font-bold">Subject: {msg.subject}</p>
+                <div className="relative flex justify-between">
+                  <Dialog
+                    open={selectedEmailMessage?.id === msg.id}
+                    onOpenChange={(open) =>
+                      open
+                        ? setSelectedEmailMessage(msg as SelectedEmailMessageType)
+                        : setSelectedEmailMessage(null)
+                    }
+                  >
+                    <div className="flex w-2/4 flex-row items-start gap-1">
+                      <DialogTrigger asChild>
+                        <div className="w-full cursor-pointer whitespace-pre-wrap border border-muted p-3 text-sm">
+                          <div className="flex flex-row items-center gap-2">
+                            <MailIcon className="h-4 w-4 text-blue-600" />
+                            <p className="font-bold">Subject: {msg.subject}</p>
+                          </div>
+                          <p className="line-clamp-2">{msg.text.substring(0, 300)}</p>
+                          <span className="text-xs text-muted-foreground">
+                            {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                          </span>
                         </div>
-                        <p className="line-clamp-2">{msg.text.substring(0, 300)}</p>
-                        <span className="text-xs text-muted-foreground">
-                          {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
-                        </span>
-                      </div>
-                    </DialogTrigger>
-                  </div>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>{msg.subject}</DialogTitle>
-                      <DialogDescription>
-                        From: {message.from}
-                        <br />
-                        Date: {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="whitespace-pre-wrap py-4">{msg.text}</div>
-                    <DialogFooter>
-                      <Button onClick={() => setSelectedEmailMessage(null)}>Close</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                      </DialogTrigger>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">More</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleReply(msg.id)}>
+                            Reply
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleRemove(msg.id)}>
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{msg.subject}</DialogTitle>
+                        <DialogDescription>
+                          From: {message.from}
+                          <br />
+                          Date: {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="whitespace-pre-wrap py-4">{msg.text}</div>
+                      <DialogFooter>
+                        <Button>Reply</Button>
+                        <Button variant="outline" onClick={() => setSelectedEmailMessage(null)}>
+                          Close
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               ) : msg.messageType === "chat" ? (
-                <div key={msg.id} className="mb-2 w-fit max-w-[70%] rounded-md bg-muted p-3">
-                  <div className="mb-1 flex items-center gap-1">
-                    <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
-                    <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
+                <div key={msg.id} className="flex w-fit max-w-fit justify-between">
+                  <div className="flex flex-col gap-1 rounded-md bg-muted p-3">
+                    <div className="flex items-center gap-1">
+                      <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
+                      <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
+                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {msg.date ? format(new Date(msg.date), "PPpp") : "N/A"}
-                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="ml-2">
+                        <MoreVertical className="h-4 w-4" />
+                        <span className="sr-only">More</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleReply(msg.id)}>Reply</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleRemove(msg.id)}>
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ) : null}
             </React.Fragment>
