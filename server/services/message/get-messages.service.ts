@@ -24,32 +24,25 @@ export const getMessagesService = async (userId: string) => {
       .exec()) as (mongoose.Document<unknown, mongoose.SchemaDefinition<IMessage>, IMessage> &
       IMessage)[]
 
-    console.log("--- Raw messages array from query (before reduce): ---")
-    console.log(JSON.stringify(messages, null, 2))
-
     if (!messages) {
       return []
     }
 
     const groupedMessages: { [userId: string]: MessageType } = messages.reduce(
       (acc: { [userId: string]: MessageType }, message) => {
-        // Safely cast populated fields to IUser
         const sender = message.populated("senderId") ? (message.senderId as unknown as IUser) : null
         const receiver = message.populated("receiverId")
           ? (message.receiverId as unknown as IUser)
           : null
 
         if (!sender || !receiver) {
-          console.warn("Sender or Receiver not populated for message:", message._id)
           return acc
         }
 
-        // Ensure _id is treated as a string
         const senderId = sender._id?.toString()
         const receiverId = receiver._id?.toString()
 
         if (!senderId || !receiverId) {
-          console.warn("Sender or Receiver ID is missing for message:", message._id)
           return acc
         }
 
@@ -77,7 +70,7 @@ export const getMessagesService = async (userId: string) => {
           subject: messageSubject,
           text: message.text,
           date: message.timestamp.toISOString(),
-          isSender: senderId === userId, // Add this field
+          isSender: senderId === userId,
         }
         acc[otherUserId].messages.push(messageDetail)
 
