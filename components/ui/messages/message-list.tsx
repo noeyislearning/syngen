@@ -5,7 +5,6 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { MessageTypeProps } from "@/lib/types"
 import { useMail } from "@/hooks/use-mail"
-
 import { Card, ScrollArea } from "@/components/shared/"
 
 interface MessageListProps {
@@ -14,7 +13,24 @@ interface MessageListProps {
 
 export function MessageList({ items }: MessageListProps) {
   const [mail, setMail] = useMail()
-  if (!items || items.length === 0) {
+  const [sortedItems, setSortedItems] = React.useState<MessageTypeProps[]>([])
+
+  React.useEffect(() => {
+    if (!items || items.length === 0) {
+      setSortedItems([])
+      return
+    }
+
+    const sorted = [...items].sort((a, b) => {
+      const latestMessageA = a.messages[0]?.date ? new Date(a.messages[0].date).getTime() : 0
+      const latestMessageB = b.messages[0]?.date ? new Date(b.messages[0].date).getTime() : 0
+      return latestMessageB - latestMessageA
+    })
+
+    setSortedItems(sorted)
+  }, [items])
+
+  if (!sortedItems || sortedItems.length === 0) {
     return (
       <ScrollArea className="h-full border-x p-2">
         <div>No messages.</div>
@@ -25,13 +41,13 @@ export function MessageList({ items }: MessageListProps) {
   return (
     <ScrollArea className="h-full border-x p-2">
       <div className="flex flex-col gap-2 pt-0">
-        {items.map((sender) => {
+        {sortedItems.map((sender) => {
           const latestMessage = sender.messages[0]
           return (
             <Card
               key={sender.userId}
               className={cn(
-                "flex cursor-pointer flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent",
+                "flex cursor-pointer flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all duration-300 ease-in-out hover:bg-accent",
                 mail.selectedSender?.userId === sender.userId && "bg-muted",
               )}
               onClick={() =>

@@ -39,18 +39,23 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
   const [messageText, setMessageText] = React.useState("")
   const [isEmailFilterOn, setIsEmailFilterOn] = React.useState(false)
 
-  // Ref for the message container
   const messagesEndRef = React.useRef<HTMLDivElement | null>(null)
 
-  // Function to scroll to the bottom of the message container
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  // Auto-scroll when chatMessages updates
   React.useEffect(() => {
     scrollToBottom()
   }, [chatMessages])
+
+  React.useEffect(() => {
+    if (message?.messages) {
+      const initialChatMessages = message.messages.filter((msg) => msg.messageType === "chat")
+      setChatMessages(initialChatMessages)
+      scrollToBottom()
+    }
+  }, [message])
 
   React.useEffect(() => {
     if (!userId || !message?.userId) return
@@ -106,16 +111,6 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
     }
   }, [userId, message?.userId, chatMessages])
 
-  React.useEffect(() => {
-    if (message?.messages) {
-      console.log("Initial message.messages prop:", message.messages) // Log initial prop
-      const initialChatMessages = message.messages.filter((msg) => msg.messageType === "chat")
-      setChatMessages(initialChatMessages)
-    } else {
-      setChatMessages([])
-    }
-  }, [message])
-
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -156,11 +151,11 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
       const dateA = a.date ? new Date(a.date) : null
       const dateB = b.date ? new Date(b.date) : null
 
-      if (!dateA && !dateB) return 0 // if both dates are null, maintain original order
-      if (!dateA) return 1 // if dateA is null or invalid, sort dateB to be earlier
-      if (!dateB) return -1 // if dateB is null or invalid, sort dateA to be earlier
+      if (!dateA && !dateB) return 0
+      if (!dateA) return 1
+      if (!dateB) return -1
 
-      return dateA.getTime() - dateB.getTime() // sort by date ascending (oldest to newest)
+      return dateA.getTime() - dateB.getTime()
     })
 
     return messagesToSort
@@ -184,7 +179,7 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
           </div>
         ) : (
           <>
-            <div className="mb-4 flex items-start gap-4 text-sm">
+            <div className="mb-4 flex items-start gap-2 text-sm">
               <Avatar>
                 <AvatarFallback className="uppercase">
                   {message.from
@@ -273,7 +268,7 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
                         {msg.isSender ? (
                           <div className="flex items-center justify-end gap-2">
                             <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
-                            <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
+                            <MessageSquareIcon className="h-4 w-4 text-cyan-600" />
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
@@ -296,7 +291,6 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
                   ) : null}
                 </div>
               ))}
-              {/* Empty div to act as the scroll target */}
               <div ref={messagesEndRef} />
             </div>
           </>
