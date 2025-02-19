@@ -3,17 +3,17 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { Card, ScrollArea } from "@/components/shared/"
-import { type MessageType } from "@/data/messages"
+import { MessageTypeProps } from "@/lib/types"
 import { useMail } from "@/hooks/use-mail"
 
+import { Card, ScrollArea } from "@/components/shared/"
+
 interface MessageListProps {
-  items: MessageType[]
+  items: MessageTypeProps[]
 }
 
 export function MessageList({ items }: MessageListProps) {
   const [mail, setMail] = useMail()
-
   if (!items || items.length === 0) {
     return (
       <ScrollArea className="h-full border-x p-2">

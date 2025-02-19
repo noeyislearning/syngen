@@ -6,11 +6,19 @@ export const apiClient = async (
   body?: Record<string, unknown>,
 ) => {
   try {
+    const accessToken = localStorage.getItem("accessToken")
+
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    }
+
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`
+    }
+
     const response = await fetch(`${API_URL}${endpoint}`, {
       method,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: body ? JSON.stringify(body) : null,
     })
 

@@ -1,14 +1,14 @@
 import { atom, useAtom } from "jotai"
 
-import { messages, type MessageType } from "@/data/messages"
+import { MessageTypeProps } from "@/lib/types"
 
 type Config = {
-  selectedSender: MessageType | null
+  selectedSender: MessageTypeProps | null
   selectedMessageId: string | null
 }
 
 const configAtom = atom<Config>({
-  selectedSender: messages[0] || null,
+  selectedSender: null,
   selectedMessageId: null,
 })
 

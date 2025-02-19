@@ -61,6 +61,7 @@ export interface FormItemContextProps {
  */
 export interface UserProps {
   userId: string
+  phoneNumber: string
   email?: string
 }
 export interface UserContextProps {
@@ -73,4 +74,29 @@ export interface UserContextProps {
 }
 export interface UserProviderProps {
   children: React.ReactNode
+}
+/**
+ * Messages
+ */
+export interface MessageDetailProps {
+  id: string
+  messageType: string
+  name: string
+  subject: string | null
+  text: string
+  date: string
+  isSender: boolean
+}
+export interface MessageTypeProps {
+  userId: string
+  from: string
+  email: string
+  phoneNumber: string
+  messages: MessageDetailProps[]
+}
+export interface SendMessageRequestPayloadProps extends Record<string, unknown> {
+  receiverId: string
+  messageType: string
+  text: string
+  subject?: string
 }

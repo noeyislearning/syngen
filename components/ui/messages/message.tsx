@@ -1,13 +1,12 @@
-// components/message.tsx
 "use client"
 
 import * as React from "react"
 import { Inbox, Send, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { type MessageType } from "@/data/messages"
-import { useMail } from "@/hooks/use-mail"
+import { MessageTypeProps } from "@/lib/types"
 import { useUser } from "@/hooks/use-user"
+import { useMail } from "@/hooks/use-mail"
 
 import { Separator, Tabs, TabsContent } from "@/components/shared/"
 import { MessageDisplay } from "@/components/ui/messages/message-display"
@@ -18,18 +17,18 @@ import { AccountSwitcher } from "@/components/ui/account-switcher"
 import { TooltipProvider } from "@/components/provider/tooltip-provider"
 
 interface MessageProps {
-  messages: MessageType[]
+  messages: MessageTypeProps[]
   navCollapsedSize: number
 }
 
 export function Message({ messages }: MessageProps) {
   const [isCollapsed] = React.useState(false)
-  const [mail] = useMail()
   const { user } = useUser()
+  const [mail] = useMail()
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex h-full items-stretch">
+      <div className="flex h-full w-full items-stretch">
         <div
           className={cn(
             "flex flex-col",
@@ -83,7 +82,7 @@ export function Message({ messages }: MessageProps) {
           </Tabs>
         </div>
         <div className="w-full">
-          <MessageDisplay message={mail.selectedSender || null} />{" "}
+          <MessageDisplay message={mail.selectedSender || null} />
         </div>
       </div>
     </TooltipProvider>
