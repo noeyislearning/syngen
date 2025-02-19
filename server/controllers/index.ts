@@ -6,4 +6,4 @@ export { logoutController } from "./auth/logout.controller"
 /**
  * User
  */
-export { registerController } from "./user/register.controllers"
+export { registerController } from "./user/register.controller"

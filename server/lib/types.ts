@@ -1,16 +1,28 @@
-import { Document } from "mongoose"
+import { Document, Schema } from "mongoose"
 import type { Request } from "express"
 
 /**
  * MODELS
  * 1. User Model
+ * 2. Chat Message Model
  */
 export interface IUser extends Document {
   email: string
   passwordHash: string
+  phoneNumber: string
+  from?: string
   createdAt: Date
   updatedAt: Date
   comparePassword(password: string): Promise<boolean>
+}
+export interface IMessage extends Document {
+  _id: Schema.Types.ObjectId
+  senderId: Schema.Types.ObjectId | IUser
+  receiverId: Schema.Types.ObjectId
+  messageType: string
+  subject?: string | null
+  text: string
+  timestamp: Date
 }
 /**
  * CONTROLLERS
@@ -18,4 +30,40 @@ export interface IUser extends Document {
  */
 export interface AuthRequest extends Request {
   user?: { userId: string }
+}
+/**
+ * SERVICES
+ * 1. Message Services
+ */
+export interface SocketIdMap {
+  [userId: string]: string
+}
+export interface MessagePayload {
+  senderId: string
+  receiverId: string
+  text: string
+}
+export interface SendMessageRequest extends Request {
+  body: {
+    senderId: string
+    receiverId: string
+    messageType: string
+    text: string
+    subject?: string
+  }
+}
+export interface MessageDetail {
+  id: string
+  messageType: string
+  name: string
+  subject: string | null
+  text: string
+  date: string
+  isSender: boolean
+}
+export interface MessageType {
+  userId: string
+  from: string
+  email: string
+  messages: MessageDetail[]
 }

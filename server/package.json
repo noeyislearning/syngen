@@ -13,6 +13,7 @@
     "@types/jsonwebtoken": "^9.0.8",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^22.13.4",
+    "@types/socket.io": "^3.0.2",
     "tsx": "^4.19.2"
   },
   "peerDependencies": {
@@ -26,6 +27,7 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.13.0",
-    "mongoose": "^8.10.1"
+    "mongoose": "^8.10.1",
+    "socket.io": "^4.8.1"
   }
 }

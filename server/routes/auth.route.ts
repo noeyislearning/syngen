@@ -1,4 +1,5 @@
 import express from "express"
+
 import { loginController, logoutController } from "../controllers"
 import { authenticate } from "../middlewares/auth.middleware"
 

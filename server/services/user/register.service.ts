@@ -5,6 +5,7 @@ import User from "../../models/user.model"
 export const registerService = async (
   email: string,
   password: string,
+  phoneNumber: string, // ADDED PHONE NUMBER PARAMETER
 ): Promise<{ message: string } | { message: string; errors: Record<string, string> }> => {
   const errors: Record<string, string> = {}
 
@@ -13,6 +14,10 @@ export const registerService = async (
   }
   if (!password) {
     errors.password = "Password is required"
+  }
+  if (!phoneNumber) {
+    // ADDED PHONE NUMBER VALIDATION
+    errors.phoneNumber = "Phone number is required"
   }
 
   if (Object.keys(errors).length > 0) {
@@ -28,7 +33,7 @@ export const registerService = async (
   }
 
   const passwordHash = await bcrypt.hash(password, 10)
-  const user = new User({ email, passwordHash })
+  const user = new User({ email, passwordHash, phoneNumber })
   await user.save()
   return { message: "User created successfully" }
 }
