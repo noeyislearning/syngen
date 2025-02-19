@@ -26,7 +26,6 @@ export function Message({ messages }: MessageProps) {
   const { user } = useUser()
   const [mail] = useMail()
 
-  // ✅ Calculate the number of conversations
   const conversationCount = messages ? messages.length : 0
 
   return (
@@ -72,8 +71,8 @@ export function Message({ messages }: MessageProps) {
             </TabsContent>
           </Tabs>
         </div>
-        <div className="w-full">
-          <MessageDisplay message={mail.selectedSender || null} />
+        <div className="flex w-full flex-col">
+          <MessageDisplay message={mail.selectedSender || null} userId={user?.userId} />
         </div>
       </div>
     </TooltipProvider>

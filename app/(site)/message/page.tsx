@@ -66,9 +66,7 @@ export default function MessagePage() {
         </div>
       )}
       {fetchLoading ? (
-        <div className="flex min-h-svh items-center justify-center">
-          <div>Loading messages...</div>
-        </div>
+        <div className="flex min-h-svh items-center justify-center"></div>
       ) : (
         <Message messages={messages} navCollapsedSize={4} />
       )}
