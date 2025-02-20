@@ -13,3 +13,5 @@ export { getUserProfileController } from "./user/get-user-profile.controller"
  */
 export { sendMessageController } from "./message/send-message.controller"
 export { getMessagesController } from "./message/get-messages.controller"
+export { sendSmsMessageController } from "./message/send-sms-message.controller"
+export { getSmsMessagesController } from "./message/get-sms-messages.controller"

@@ -4,8 +4,9 @@ import cors from "cors"
 import http from "http"
 import { Server } from "socket.io"
 
-import type { SocketIdMap, MessagePayload } from "./lib/types"
+import type { SocketIdMap, MessagePayload, SmsMessagePayload } from "./lib/types"
 import { handleMessage } from "./controllers/message/send-message.controller"
+import { handleSmsMessage } from "./controllers/message/send-sms-message.controller" // Import SMS handler
 
 import authRoutes from "./routes/auth.route"
 import userRoutes from "./routes/user.route"
@@ -43,6 +44,10 @@ io.on("connection", (socket) => {
 
   socket.on("chatMessage", (payload: MessagePayload) => {
     handleMessage(socket, io, payload)
+  })
+
+  socket.on("smsMessage", (payload: SmsMessagePayload) => {
+    handleSmsMessage(socket, io, payload)
   })
 
   socket.on("disconnect", () => {

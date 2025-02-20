@@ -65,10 +65,45 @@ export interface MessageDetail {
   date: string
   isSender: boolean
 }
+export interface SmsMessageType {
+  userId: string
+  to: string
+  email: string
+  phoneNumber: string
+  messages: MessageDetail[]
+}
 export interface MessageType {
   userId: string
   from: string
   email: string
   phoneNumber: string
   messages: MessageDetail[]
+}
+export interface ISmsMessage {
+  senderId: string
+  receiverId: string
+  messageType: "sms"
+  text: string
+  timestamp: Date
+  senderNumber: string
+  receiverNumber: string
+  _id?: string
+}
+
+export interface SmsMessagePayload {
+  senderId: string
+  receiverId: string
+  text: string
+  senderNumber: string
+  receiverNumber: string
+  timestamp: string
+}
+export interface SendSmsMessageRequest extends Express.Request {
+  body: {
+    senderId: string
+    receiverId: string
+    text: string
+    senderNumber: string
+    receiverNumber: string
+  }
 }
