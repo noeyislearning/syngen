@@ -89,21 +89,3 @@ export interface ISmsMessage {
   receiverNumber: string
   _id?: string
 }
-
-export interface SmsMessagePayload {
-  senderId: string
-  receiverId: string
-  text: string
-  senderNumber: string
-  receiverNumber: string
-  timestamp: string
-}
-export interface SendSmsMessageRequest extends Express.Request {
-  body: {
-    senderId: string
-    receiverId: string
-    text: string
-    senderNumber: string
-    receiverNumber: string
-  }
-}

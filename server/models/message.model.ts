@@ -2,20 +2,21 @@ import mongoose, { Schema } from "mongoose"
 
 import type { IMessage } from "../lib/types"
 
-const messageSchema: Schema = new Schema(
+const chatMessageSchema: Schema = new Schema(
   {
-    senderId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
-    receiverId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
-    messageType: { type: String, default: "chat" },
-    subject: { type: String },
+    senderId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    receiverId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    messageType: { type: String, enum: ["chat", "email", "sms"], default: "chat" },
+    subject: { type: String, default: null },
     text: { type: String, required: true },
+    senderNumber: { type: String, default: null },
+    receiverNumber: { type: String, default: null },
     timestamp: { type: Date, default: Date.now },
   },
   {
-    timestamps: false,
+    timestamps: true,
   },
 )
 
-const Message = mongoose.model<IMessage>("Message", messageSchema)
-
-export default Message
+const ChatMessage = mongoose.model<IMessage>("ChatMessage", chatMessageSchema)
+export default ChatMessage

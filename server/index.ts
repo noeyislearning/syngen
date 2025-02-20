@@ -4,9 +4,7 @@ import cors from "cors"
 import http from "http"
 import { Server } from "socket.io"
 
-import type { SocketIdMap, MessagePayload, SmsMessagePayload } from "./lib/types"
-import { handleMessage } from "./controllers/message/send-message.controller"
-import { handleSmsMessage } from "./controllers/message/send-sms-message.controller" // Import SMS handler
+import type { SocketIdMap } from "./lib/types"
 
 import authRoutes from "./routes/auth.route"
 import userRoutes from "./routes/user.route"
@@ -36,19 +34,14 @@ mongoose
   .catch((err) => console.error("MongoDB connection error:", err))
 
 const socketIdMap: SocketIdMap = {}
+app.set("socketIdMap", socketIdMap)
+app.set("io", io) // Add this line to set 'io' on the app
+
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId as string
   if (userId) {
     socketIdMap[userId] = socket.id
   }
-
-  socket.on("chatMessage", (payload: MessagePayload) => {
-    handleMessage(socket, io, payload)
-  })
-
-  socket.on("smsMessage", (payload: SmsMessagePayload) => {
-    handleSmsMessage(socket, io, payload)
-  })
 
   socket.on("disconnect", () => {
     for (const uid in socketIdMap) {
