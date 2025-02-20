@@ -6,6 +6,8 @@ import { io } from "socket.io-client"
 import { SOCKET_URL } from "@/lib/constants"
 import { Separator } from "@/components/shared/"
 import { MessageTypeProps } from "@/lib/types"
+import { apiClient } from "@/lib/api"
+import { useUser } from "@/hooks/use-user"
 
 import { ContactInfo } from "./contact-info"
 import { MessageFilter } from "./message-filter"
@@ -28,15 +30,17 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
   const [messageFilter, setMessageFilter] = React.useState<string>("chat")
 
   const filteredMessages = React.useMemo(() => {
-    if (!message?.messages) return []
+    if (!chatMessages) return []
 
     let messagesToSort = []
     if (messageFilter === "email") {
-      messagesToSort = message.messages.filter((msg) => msg.messageType === "email")
+      messagesToSort = chatMessages.filter((msg) => msg.messageType === "email")
     } else if (messageFilter === "chat") {
-      messagesToSort = chatMessages
+      messagesToSort = chatMessages.filter((msg) => msg.messageType === "chat")
+    } else if (messageFilter === "sms") {
+      messagesToSort = chatMessages.filter((msg) => msg.messageType === "sms")
     } else {
-      messagesToSort = chatMessages // Default to chat if filter is not email or chat
+      messagesToSort = chatMessages
     }
 
     messagesToSort.sort((a, b) => {
@@ -51,7 +55,7 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
     })
 
     return messagesToSort
-  }, [messageFilter, message?.messages, chatMessages])
+  }, [messageFilter, chatMessages])
 
   const formatDateDisplay = (dateString: string | undefined) => {
     if (!dateString) return "N/A"
@@ -67,8 +71,7 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
 
   React.useEffect(() => {
     if (message?.messages) {
-      const initialChatMessages = message.messages.filter((msg) => msg.messageType === "chat")
-      setChatMessages(initialChatMessages)
+      setChatMessages(message.messages)
     }
   }, [message])
 
@@ -86,22 +89,22 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
     })
 
     newSocket.on(
-      "chatMessage",
-      (payload: { senderId: string; text: string; timestamp: string }) => {
-        console.log("Received chatMessage EVENT in CLIENT:", payload)
-        console.log("Current chatMessages state (before update):", chatMessages)
+      "message",
+      (payload: { senderId: string; text: string; timestamp: string; messageType: string }) => {
+        console.log("Received message EVENT in CLIENT:", payload)
+        console.log("Current chatMessages state (before message update):", chatMessages)
         setChatMessages((prevMessages) => {
           const updatedMessages = [
             ...prevMessages,
             {
               id: Math.random().toString(36).substring(7),
-              messageType: "chat",
+              messageType: payload.messageType,
               isSender: payload.senderId === userId,
               text: payload.text,
               date: payload.timestamp,
             } as MessageTypeProps["messages"][number],
           ]
-          console.log("Updated chatMessages state (after update):", updatedMessages)
+          console.log("Updated chatMessages state (after message update):", updatedMessages)
           return updatedMessages
         })
       },
@@ -118,7 +121,7 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
     return () => {
       console.log("Disconnecting socket")
       newSocket.off("connect")
-      newSocket.off("chatMessage")
+      newSocket.off("message")
       newSocket.off("chatMessageError")
       newSocket.off("disconnect")
       newSocket.disconnect()
@@ -126,22 +129,67 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
     }
   }, [userId, message?.userId, chatMessages, setChatMessages])
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const { user } = useUser()
+
+  const handleSendMessage = async (e: React.FormEvent, messageType: string, subject?: string) => {
     e.preventDefault()
 
-    if (!socket || !message?.userId || !userId || !messageText.trim()) {
-      console.log("Input validation failed in handleSendMessage")
-      return
-    }
+    if (messageType === "chat") {
+      if (!socket || !message?.userId || !userId || !messageText.trim()) {
+        return
+      }
 
-    const payload = {
-      senderId: userId,
-      receiverId: message.userId,
-      text: messageText.trim(),
-    }
+      const payload = {
+        senderId: userId,
+        receiverId: message.userId,
+        text: messageText.trim(),
+      }
 
-    socket.emit("chatMessage", payload)
-    setMessageText("")
+      try {
+        const response = await apiClient("/message/messages", "POST", {
+          ...payload,
+          messageType: "chat",
+        })
+        console.log("Chat message send response:", response)
+      } catch (error) {
+        console.error("Error sending chat message:", error)
+      }
+      setMessageText("")
+    } else if (messageType === "email") {
+      if (!message?.userId || !userId || !messageText.trim() || !subject?.trim()) {
+        return
+      }
+
+      setMessageText("")
+    } else if (messageType === "sms") {
+      if (
+        !message?.userId ||
+        !userId ||
+        !messageText.trim() ||
+        !message?.phoneNumber ||
+        !message?.phoneNumber
+      ) {
+        return
+      }
+
+      const smsPayload = {
+        senderId: userId,
+        receiverId: message.userId,
+        messageType: "sms",
+        text: messageText.trim(),
+        senderNumber: user?.phoneNumber,
+        receiverNumber: message.phoneNumber,
+      }
+
+      try {
+        const response = await apiClient("/message/messages", "POST", smsPayload)
+        console.log("SMS send response:", response)
+      } catch (error) {
+        console.error("Error sending SMS:", error)
+      }
+
+      setMessageText("")
+    }
   }
 
   return (
@@ -176,6 +224,7 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
           setMessageText={setMessageText}
           handleSendMessage={handleSendMessage}
           message={message}
+          messageFilter={messageFilter}
         />
       )}
     </div>

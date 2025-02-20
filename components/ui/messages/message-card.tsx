@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { MailIcon, MessageSquareIcon } from "lucide-react"
+import { MailIcon, MessageSquareIcon, PhoneIcon } from "lucide-react" // Import PhoneIcon for SMS
 import {
   Button,
   Dialog,
@@ -129,6 +129,36 @@ export const MessageCard: React.FC<MessageCardProps> = ({
                 ) : (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <MessageSquareIcon className="h-4 w-4 text-emerald-600" />
+                    {formatDateDisplay(msg.date)}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : msg.messageType === "sms" && messageFilter === "sms" ? ( // ADDED SMS RENDERING LOGIC HERE
+            <div
+              key={msg.id}
+              className={`flex w-fit max-w-fit ${
+                msg.isSender ? "ml-auto justify-end" : "justify-start"
+              }`}
+            >
+              <div className="flex max-w-xs flex-col gap-1 rounded-md bg-muted p-3">
+                {msg.isSender ? (
+                  <div className="flex items-center justify-end gap-2">
+                    <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
+                  </div>
+                )}
+                {msg.isSender ? (
+                  <div className="flex items-center justify-end gap-2 text-end text-xs text-muted-foreground">
+                    {formatDateDisplay(msg.date)}
+                    <PhoneIcon className="h-4 w-4 text-orange-500" />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <PhoneIcon className="h-4 w-4 text-orange-500" />
                     {formatDateDisplay(msg.date)}
                   </div>
                 )}

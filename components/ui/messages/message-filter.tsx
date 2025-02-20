@@ -28,6 +28,7 @@ export const MessageFilter: React.FC<MessageFilterProps> = ({
         <SelectGroup>
           <SelectItem value="chat">Chat</SelectItem>
           <SelectItem value="email">Email</SelectItem>
+          <SelectItem value="sms">SMS</SelectItem>
         </SelectGroup>
       </SelectContent>
     </Select>
