@@ -10,7 +10,7 @@ Building a fully functional omni-channel communication app. Explore the implemen
 
 </div>
 
-![site-preview](/.docs/img/login.png)
+![site-preview](/.docs/img/login2.png)
 
 <div align=center>
 
@@ -18,7 +18,7 @@ Building a fully functional omni-channel communication app. Explore the implemen
 
 </div>
 
-![site-preview](/.docs/img/site.png)
+![site-preview](/.docs/img/messaging2.png)
 
 <div align=center>
 
@@ -26,7 +26,7 @@ Building a fully functional omni-channel communication app. Explore the implemen
 
 </div>
 
-![site-preview](/.docs/img/calling.png)
+![site-preview](/.docs/img/calling2.png)
 
 <div align=center>
 
@@ -34,4 +34,4 @@ Building a fully functional omni-channel communication app. Explore the implemen
 
 </div>
 
-![site-preview](/.docs/img/email.png)
+![site-preview](/.docs/img/email2.png)
