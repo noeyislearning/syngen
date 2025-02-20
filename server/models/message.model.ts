@@ -10,6 +10,8 @@ const messageSchema: Schema = new Schema(
     subject: { type: String },
     text: { type: String, required: true },
     timestamp: { type: Date, default: Date.now },
+    senderNumber: { type: String, default: null },
+    receiverNumber: { type: String, default: null },
   },
   {
     timestamps: false,

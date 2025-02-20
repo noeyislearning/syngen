@@ -51,7 +51,6 @@ export const handleMessage = async (socket: Socket, io: Server, payload: Message
         timestamp: chatMessage.timestamp.toISOString(),
       })
       senderSocket.emit("chatMessage", {
-        // Emit to sender's socket
         senderId,
         receiverId,
         text,
@@ -76,7 +75,8 @@ export const sendMessageController = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { senderId, receiverId, messageType, text, subject } = req.body
+    const { senderId, receiverId, messageType, text, subject, senderNumber, receiverNumber } =
+      req.body // ADDED senderNumber, receiverNumber
 
     if (!senderId || !receiverId || !messageType || !text) {
       res.status(400).json({ message: "Missing required fields." })
@@ -88,12 +88,22 @@ export const sendMessageController = async (
       return
     }
 
+    if (messageType === "sms" && (!senderNumber || !receiverNumber)) {
+      // CHECK if senderNumber and receiverNumber is missing
+      res
+        .status(400)
+        .json({ message: "Sender and receiver numbers are required for SMS messages." })
+      return
+    }
+
     const newMessage: IMessage = new ChatMessage({
       senderId,
       receiverId,
       messageType,
       text,
       subject: messageType === "email" ? subject : null,
+      senderNumber: messageType === "sms" ? senderNumber : null, // ADD senderNumber conditionally
+      receiverNumber: messageType === "sms" ? receiverNumber : null, // ADD receiverNumber conditionally
     })
 
     await newMessage.save()

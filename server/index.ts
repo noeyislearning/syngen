@@ -36,12 +36,9 @@ mongoose
 
 const socketIdMap: SocketIdMap = {}
 io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`)
-
   const userId = socket.handshake.query.userId as string
   if (userId) {
     socketIdMap[userId] = socket.id
-    console.log(`User ${userId} connected with socket ID: ${socket.id}`)
   }
 
   socket.on("chatMessage", (payload: MessagePayload) => {
@@ -49,11 +46,9 @@ io.on("connection", (socket) => {
   })
 
   socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id}`)
     for (const uid in socketIdMap) {
       if (socketIdMap[uid] === socket.id) {
         delete socketIdMap[uid]
-        console.log(`User ${uid} disconnected, removed socket ID.`)
         break
       }
     }
