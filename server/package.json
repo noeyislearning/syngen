@@ -29,6 +29,7 @@
     "mongodb": "^6.13.0",
     "mongoose": "^8.10.1",
     "socket.io": "^4.8.1",
+    "socket.io-msgpack-parser": "^3.0.2",
     "twilio": "^5.4.4"
   }
 }
