@@ -13,6 +13,8 @@ import { ContactInfo } from "./contact-info"
 import { MessageFilter } from "./message-filter"
 import { MessageCard } from "./message-card"
 import { MessageInput } from "./message-input"
+import { VoiceCall, VoiceCallUI } from "./voice-call"
+import { IncomingVoiceCall } from "./incoming-voice-call"
 
 interface MessageDisplayProps {
   message: MessageTypeProps | null
@@ -21,6 +23,11 @@ interface MessageDisplayProps {
 
 type SelectedEmailMessageType = MessageTypeProps["messages"][number] | null
 
+const configuration = {
+  // STUN server configuration for WebRTC
+  iceServers: [{ urls: "stun:stun.stunprotocol.org" }],
+}
+
 export function MessageDisplay({ message, userId }: MessageDisplayProps) {
   const [selectedEmailMessage, setSelectedEmailMessage] =
     React.useState<SelectedEmailMessageType>(null)
@@ -28,6 +35,16 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
   const [socket, setSocket] = React.useState<ReturnType<typeof io> | null>(null)
   const [messageText, setMessageText] = React.useState("")
   const [messageFilter, setMessageFilter] = React.useState<string>("chat")
+  const [incomingCallerId, setIncomingCallerId] = React.useState<string | null>(null)
+  const [isCalling, setIsCalling] = React.useState<boolean>(false)
+  const [receiverNameForCall, setReceiverNameForCall] = React.useState<string | null>(null)
+  const [isMuted, setIsMuted] = React.useState<boolean>(false)
+  const [dialogOpen, setDialogOpen] = React.useState(false)
+
+  // WebRTC states
+  const [peerConnection, setPeerConnection] = React.useState<RTCPeerConnection | null>(null)
+  const peerConnectionRef = React.useRef<RTCPeerConnection | null>(null) // <-- useRef here
+  const [localStream, setLocalStream] = React.useState<MediaStream | null>(null)
 
   const filteredMessages = React.useMemo(() => {
     if (!chatMessages) return []
@@ -78,24 +95,37 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
   React.useEffect(() => {
     if (!userId || !message?.userId) return
 
-    const newSocket = io(SOCKET_URL, {
-      query: { userId: userId },
-    })
+    const setupSocket = () => {
+      const socket = io(SOCKET_URL, {
+        query: { userId: userId },
+        transports: ["websocket", "polling"],
+        reconnectionAttempts: 5,
+        withCredentials: true,
+      })
 
-    setSocket(newSocket)
+      // Connection events
+      socket.on("connect", () => {
+        console.log(`Socket connected: ${socket.id}`)
+      })
 
-    newSocket.on("connect", () => {
-      console.log(`Socket connected: ${newSocket.id}`)
-    })
+      socket.on("connect_error", (err) => {
+        console.log("Connection Error:", err.message)
+      })
 
-    newSocket.on(
-      "message",
-      (payload: { senderId: string; text: string; timestamp: string; messageType: string }) => {
-        console.log("Received message EVENT in CLIENT:", payload)
-        console.log("Current chatMessages state (before message update):", chatMessages)
-        setChatMessages((prevMessages) => {
-          const updatedMessages = [
-            ...prevMessages,
+      socket.on("reconnect_attempt", (attempt) => {
+        console.log("Reconnection Attempt:", attempt)
+      })
+
+      socket.on("reconnect_failed", () => {
+        console.log("Reconnection Failed")
+      })
+
+      // Message handling
+      socket.on(
+        "message",
+        (payload: { senderId: string; text: string; timestamp: string; messageType: string }) => {
+          setChatMessages((prev) => [
+            ...prev,
             {
               id: Math.random().toString(36).substring(7),
               messageType: payload.messageType,
@@ -103,31 +133,52 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
               text: payload.text,
               date: payload.timestamp,
             } as MessageTypeProps["messages"][number],
-          ]
-          console.log("Updated chatMessages state (after message update):", updatedMessages)
-          return updatedMessages
-        })
-      },
-    )
+          ])
+        },
+      )
 
-    newSocket.on("chatMessageError", (error: Error) => {
-      console.error("Chat message error:", error)
-    })
+      // Call handling
+      socket.on("incomingCall", handleIncomingCall)
+      socket.on("callAnswered", handleCallAnswered)
+      socket.on("offer", handleOffer)
+      socket.on("answer", handleAnswer)
+      socket.on("iceCandidate", handleIceCandidate)
+      socket.on("hangUp", handleRemoteHangUp)
 
-    newSocket.on("disconnect", () => {
-      console.log("Socket disconnected")
-    })
+      // Error handling
+      socket.on("chatMessageError", (error: Error) => {
+        console.error("Chat message error:", error)
+      })
 
+      socket.on("disconnect", () => {
+        console.log("Socket disconnected")
+      })
+
+      return socket
+    }
+
+    const newSocket = setupSocket()
+    setSocket(newSocket)
+
+    // Cleanup function
     return () => {
-      console.log("Disconnecting socket")
-      newSocket.off("connect")
-      newSocket.off("message")
-      newSocket.off("chatMessageError")
-      newSocket.off("disconnect")
-      newSocket.disconnect()
+      if (newSocket) {
+        console.log("Disconnecting socket")
+        newSocket.off("connect")
+        newSocket.off("message")
+        newSocket.off("chatMessageError")
+        newSocket.off("disconnect")
+        newSocket.off("incomingCall")
+        newSocket.off("callAnswered")
+        newSocket.off("offer")
+        newSocket.off("answer")
+        newSocket.off("iceCandidate")
+        newSocket.off("hangUp")
+        newSocket.disconnect()
+      }
       setSocket(null)
     }
-  }, [userId, message?.userId, chatMessages, setChatMessages])
+  }, [userId, message?.userId])
 
   const { user } = useUser()
 
@@ -192,6 +243,314 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
     }
   }
 
+  const startCall = async () => {
+    console.log("Initiating call...")
+    setIsCalling(true)
+    setDialogOpen(true)
+
+    console.log("startCall: Initializing RTCPeerConnection")
+    const pc = new RTCPeerConnection(configuration)
+    setPeerConnection(pc)
+    peerConnectionRef.current = pc
+
+    if (socket && message?.userId && userId) {
+      socket.emit("callUser", {
+        receiverId: message.userId,
+        callerId: userId,
+      })
+    } else {
+      console.error("Socket, receiverId, or userId missing. Cannot initiate call.")
+      setIsCalling(false)
+      setDialogOpen(false)
+      return null
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      setLocalStream(stream)
+
+      stream.getTracks().forEach((track) => {
+        pc.addTrack(track, stream)
+      })
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          console.log("ICE candidate sent")
+          socket?.emit("iceCandidate", {
+            receiverId: message?.userId,
+            iceCandidate: event.candidate,
+          })
+        }
+      }
+
+      pc.ontrack = (event) => {
+        event.streams[0].getAudioTracks().forEach((track) => {
+          track.enabled = true // Ensure track is enabled when received
+        })
+        // For actual playback in UI, you would attach this stream to an <audio> element.
+        // For this example, we'll just log that we received a track.
+        console.log("Track event received:", event.streams[0])
+      }
+
+      pc.onnegotiationneeded = async () => {
+        try {
+          const offer = await pc.createOffer()
+          console.log("Created offer:", offer)
+
+          if (!offer.sdp) {
+            throw new Error("Failed to generate valid SDP")
+          }
+
+          await pc.setLocalDescription(offer)
+          socket?.emit("offer", {
+            receiverId: message?.userId,
+            offer: {
+              type: offer.type,
+              sdp: offer.sdp,
+            },
+            callerId: userId,
+          })
+        } catch (error) {
+          console.error("Error creating/sending offer:", error)
+        }
+      }
+
+      return pc // Return the peer connection for use in handleInitiateCall
+    } catch (error) {
+      console.error("Error starting call:", error)
+      setIsCalling(false)
+      setDialogOpen(false)
+      setLocalStream(null)
+      setPeerConnection(null)
+      peerConnectionRef.current = null // <-- Also reset ref on error
+      return null
+    }
+  }
+
+  const handleInitiateCall = async () => {
+    console.log("Initiating call...")
+    setIsCalling(true)
+    setDialogOpen(true)
+
+    const pc = await startCall() // Start call and get peer connection
+    if (!pc) {
+      setIsCalling(false) // Reset if startCall fails
+      setDialogOpen(false)
+    }
+    // Peer connection and stream are now set via startCall
+  }
+
+  const handleAnswerIncomingCall = async () => {
+    console.log("handleAnswerIncomingCall START", peerConnection) // --- ADDED LOG ---
+    console.log("Answer call button clicked!")
+    setIsCalling(true)
+    setDialogOpen(true)
+    setReceiverNameForCall(message?.from || null)
+
+    if (!socket || !incomingCallerId || !userId) {
+      // Removed peerConnection check here as it should be initialized in handleIncomingCall
+      console.error("Socket not initialized or missing user IDs for answering call")
+      setIncomingCallerId(null)
+      return
+    }
+  }
+
+  const handleRejectIncomingCall = () => {
+    console.log("Reject call button clicked!")
+    setIncomingCallerId(null)
+    socket?.emit("rejectCall", { callerId: incomingCallerId, receiverId: userId }) // Optional chaining here
+  }
+
+  const handleHangUpCall = () => {
+    console.log("Hanging up call in MessageDisplay")
+    if (peerConnectionRef.current) {
+      // Use ref here for checking and closing
+      peerConnectionRef.current.close()
+      peerConnectionRef.current = null
+      setPeerConnection(null) // Also reset state for consistency
+    }
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop())
+      setLocalStream(null)
+    }
+    setIsCalling(false)
+    setDialogOpen(false)
+    socket?.emit("hangUp", {
+      // Optional chaining here
+      receiverId: message?.userId,
+      callerId: userId, // or current userId
+    })
+  }
+
+  const toggleMute = () => {
+    if (localStream) {
+      localStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+      setIsMuted(!isMuted)
+    }
+  }
+
+  // --- Socket Event Handlers ---
+  const handleIncomingCall = async (data: { callerId: string }) => {
+    console.log("handleIncomingCall START") // --- ADDED LOG ---
+    setIncomingCallerId(data.callerId)
+    console.log("Pre-initializing WebRTC for incoming call from:", data.callerId)
+
+    // Initialize peerConnection EARLY
+    console.log("handleIncomingCall: Initializing RTCPeerConnection at the start") // --- ADDED LOG ---
+    const pc = new RTCPeerConnection(configuration)
+    setPeerConnection(pc)
+    peerConnectionRef.current = pc // <-- Set the ref here
+    console.log("handleIncomingCall: RTCPeerConnection initialized:", peerConnectionRef.current) // --- ADDED LOG ---
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }) // AWAIT here
+      setLocalStream(stream)
+
+      stream.getTracks().forEach((track) => {
+        pc.addTrack(track, stream)
+      })
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          console.log("ICE candidate (pre-init) sent from answerer")
+          socket?.emit("iceCandidate", {
+            receiverId: data.callerId,
+            iceCandidate: event.candidate,
+          })
+        }
+      }
+
+      pc.ontrack = (event) => {
+        event.streams[0].getAudioTracks().forEach((track) => {
+          track.enabled = true
+        })
+        console.log("Track event received (pre-init) on answerer side:", event.streams[0])
+      }
+
+      pc.onnegotiationneeded = () => {
+        // No offer creation here as answerer
+      }
+
+      console.log("WebRTC pre-initialized for incoming call.")
+      console.log("handleIncomingCall END") // --- ADDED LOG ---
+    } catch (error) {
+      console.error("Error pre-initializing WebRTC for incoming call:", error)
+      setIncomingCallerId(null) // Maybe reject call automatically in UI?
+      console.log("handleIncomingCall END with error") // --- ADDED LOG ---
+    }
+  }
+
+  const handleCallAnswered = async (data: {
+    answer: RTCSessionDescriptionInit // Changed from 'signal' to 'answer'
+    calleeId: string
+  }) => {
+    console.log("'callAnswered' event received:", data)
+    if (!peerConnectionRef.current) {
+      console.error("Peer connection not initialized when 'callAnswered' received.")
+      return
+    }
+    const pc = peerConnectionRef.current
+    try {
+      // Directly use the answer object
+      await pc.setRemoteDescription(data.answer)
+      console.log("Remote description set from answer")
+    } catch (error) {
+      console.error("Error setting remote description from answer:", error)
+    }
+  }
+
+  const handleOffer = async (data: { offer: RTCSessionDescriptionInit; callerId: string }) => {
+    if (!data.offer || !data.offer.type || !data.offer.sdp) {
+      console.error("Invalid offer received:", data.offer)
+      return
+    }
+    console.log("handleOffer ENTER", peerConnectionRef.current)
+    if (!peerConnectionRef.current) return
+
+    const pc = peerConnectionRef.current
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(data.offer))
+      console.log("Remote description set from offer")
+
+      const answer = await pc.createAnswer()
+      await pc.setLocalDescription(answer)
+
+      console.log("Emitting answer with:", {
+        callerId: data.callerId,
+        answer: { type: answer.type, sdp: answer.sdp },
+        calleeId: userId,
+      })
+      socket?.emit("answer", {
+        callerId: data.callerId,
+        answer: { type: answer.type, sdp: answer.sdp },
+        calleeId: userId,
+      })
+    } catch (error) {
+      console.error("Error handling offer:", error)
+    }
+  }
+
+  const handleAnswer = async (data: { answer: RTCSessionDescriptionInit; calleeId: string }) => {
+    console.log("'answer' event received:", data)
+    if (!data.answer || !data.answer.type || !data.answer.sdp) {
+      console.error("Invalid answer received:", data.answer)
+      return
+    }
+    if (!peerConnectionRef.current) {
+      console.error("Peer connection not initialized when 'answer' received.")
+      return
+    }
+    const pc = peerConnectionRef.current
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(data.answer))
+      console.log("Remote description set from answer")
+    } catch (error) {
+      console.error("Error setting remote description from answer:", error)
+    }
+  }
+
+  const handleIceCandidate = async (data: {
+    iceCandidate: RTCIceCandidateInit
+    senderId: string
+  }) => {
+    console.log("handleIceCandidate ENTER", peerConnectionRef.current) // Log ref value
+    if (!peerConnectionRef.current) {
+      // Use ref here
+      console.error("Peer connection not initialized when 'iceCandidate' received.")
+      return
+    }
+    console.log("handleIceCandidate: Peer connection is initialized:", peerConnectionRef.current) // --- ADDED LOG ---
+    const pc = peerConnectionRef.current // Get pc from ref
+    try {
+      await pc.addIceCandidate(
+        new RTCIceCandidate({
+          candidate: data.iceCandidate.candidate,
+          sdpMid: data.iceCandidate.sdpMid,
+          sdpMLineIndex: data.iceCandidate.sdpMLineIndex,
+        }),
+      )
+      console.log("ICE candidate added")
+    } catch (error) {
+      console.error("Error adding ice candidate:", error)
+    }
+  }
+
+  const handleRemoteHangUp = () => {
+    console.log("Remote user hung up.")
+    if (peerConnectionRef.current) {
+      // Use ref here for checking and closing
+      peerConnectionRef.current.close()
+      peerConnectionRef.current = null
+      setPeerConnection(null) // Also reset state for consistency
+    }
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop())
+      setLocalStream(null)
+    }
+    setIsCalling(false)
+    setDialogOpen(false)
+  }
+
   return (
     <div className="flex h-full flex-col">
       <Separator />
@@ -204,7 +563,26 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
           <>
             <div className="flex w-full flex-row items-center justify-between">
               <ContactInfo message={message} />
-              <MessageFilter messageFilter={messageFilter} setMessageFilter={setMessageFilter} />
+              <div className="flex flex-row items-center gap-4">
+                <MessageFilter messageFilter={messageFilter} setMessageFilter={setMessageFilter} />
+                {isCalling ? (
+                  <VoiceCallUI
+                    onHangUp={handleHangUpCall}
+                    isMuted={isMuted}
+                    toggleMute={toggleMute}
+                    receiverName={receiverNameForCall}
+                  />
+                ) : (
+                  <VoiceCall
+                    receiverName={receiverNameForCall}
+                    receiverPhoneNumber={message?.phoneNumber}
+                    onCallInitiate={handleInitiateCall}
+                    socket={socket}
+                    dialogOpen={dialogOpen}
+                    setDialogOpen={setDialogOpen}
+                  />
+                )}
+              </div>
             </div>
             <MessageCard
               filteredMessages={filteredMessages}
@@ -225,6 +603,14 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
           handleSendMessage={handleSendMessage}
           message={message}
           messageFilter={messageFilter}
+        />
+      )}
+
+      {incomingCallerId && (
+        <IncomingVoiceCall
+          callerId={incomingCallerId}
+          onAnswer={handleAnswerIncomingCall}
+          onReject={handleRejectIncomingCall}
         />
       )}
     </div>

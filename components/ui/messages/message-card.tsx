@@ -144,11 +144,11 @@ export const MessageCard: React.FC<MessageCardProps> = ({
               <div className="flex max-w-xs flex-col gap-1 rounded-md bg-muted p-3">
                 {msg.isSender ? (
                   <div className="flex items-center justify-end gap-2">
-                    <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
+                    <p className="line-clamp-2 whitespace-pre-wrap text-sm">{msg.text}</p>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
+                    <p className="line-clamp-2 whitespace-pre-wrap text-sm">{msg.text}</p>
                   </div>
                 )}
                 {msg.isSender ? (
