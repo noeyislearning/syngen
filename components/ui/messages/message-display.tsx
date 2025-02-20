@@ -5,7 +5,7 @@ import * as React from "react"
 import { io } from "socket.io-client"
 import { SOCKET_URL } from "@/lib/constants"
 import { Separator } from "@/components/shared/"
-import { MessageTypeProps } from "@/lib/types"
+import { MessageTypeProps, IAttachment } from "@/lib/types"
 import { apiClient } from "@/lib/api"
 import { useUser } from "@/hooks/use-user"
 
@@ -25,7 +25,7 @@ type SelectedEmailMessageType = MessageTypeProps["messages"][number] | null
 
 const configuration = {
   // STUN server configuration for WebRTC
-  iceServers: [{ urls: "stun:stun.stunprotocol.org" }],
+  iceServers: [{ urls: "stun:stunprotocol.org" }],
 }
 
 export function MessageDisplay({ message, userId }: MessageDisplayProps) {
@@ -45,6 +45,7 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
   const [peerConnection, setPeerConnection] = React.useState<RTCPeerConnection | null>(null)
   const peerConnectionRef = React.useRef<RTCPeerConnection | null>(null) // <-- useRef here
   const [localStream, setLocalStream] = React.useState<MediaStream | null>(null)
+  const [files, setFiles] = React.useState<FileList | null>(null) // State to hold selected files
 
   const filteredMessages = React.useMemo(() => {
     if (!chatMessages) return []
@@ -120,20 +121,65 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
         console.log("Reconnection Failed")
       })
 
-      // Message handling
       socket.on(
         "message",
-        (payload: { senderId: string; text: string; timestamp: string; messageType: string }) => {
-          setChatMessages((prev) => [
-            ...prev,
-            {
-              id: Math.random().toString(36).substring(7),
+        (payload: {
+          senderId: string
+          text: string
+          timestamp: string
+          messageType: string
+          messageId: string
+          attachments?: IAttachment[]
+        }) => {
+          setChatMessages((prev) => {
+            // Check if message with this messageId already exists
+            const messageExists = prev.some((m) => m.id === payload.messageId)
+            if (messageExists) {
+              console.log("Duplicate message received via socket, ignoring.")
+              return prev // Return previous state without adding duplicate
+            }
+            const newMessage = {
+              id: payload.messageId,
               messageType: payload.messageType,
               isSender: payload.senderId === userId,
               text: payload.text,
               date: payload.timestamp,
-            } as MessageTypeProps["messages"][number],
-          ])
+              attachments: payload.attachments || [],
+            } as MessageTypeProps["messages"][number]
+            return [...prev, newMessage]
+          })
+        },
+      )
+
+      socket.on(
+        "emailSaved",
+        (payload: {
+          senderId: string
+          receiverId: string
+          text: string
+          subject: string
+          timestamp: string
+          messageType: string
+          messageId: string
+          attachments?: IAttachment[]
+        }) => {
+          setChatMessages((prev) => {
+            const messageExists = prev.some((m) => m.id === payload.messageId)
+            if (messageExists) {
+              console.log("Duplicate emailSaved message received via socket, ignoring.")
+              return prev
+            }
+            const newMessage = {
+              id: payload.messageId,
+              messageType: payload.messageType,
+              isSender: payload.senderId === userId,
+              text: payload.text,
+              date: payload.timestamp,
+              subject: payload.subject,
+              attachments: payload.attachments || [],
+            } as MessageTypeProps["messages"][number]
+            return [...prev, newMessage]
+          })
         },
       )
 
@@ -182,36 +228,81 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
 
   const { user } = useUser()
 
-  const handleSendMessage = async (e: React.FormEvent, messageType: string, subject?: string) => {
+  const handleSendMessage = async (
+    e: React.FormEvent,
+    messageType: string,
+    subject?: string,
+    files?: FileList | null,
+  ) => {
     e.preventDefault()
+
+    const selectedFiles = files
 
     if (messageType === "chat") {
       if (!socket || !message?.userId || !userId || !messageText.trim()) {
         return
       }
 
-      const payload = {
-        senderId: userId,
-        receiverId: message.userId,
-        text: messageText.trim(),
+      const formData = new FormData() // Create FormData
+      formData.append("senderId", userId)
+      formData.append("receiverId", message.userId)
+      formData.append("messageType", "chat") // Ensure messageType is 'chat' here
+      formData.append("text", messageText.trim())
+
+      if (selectedFiles) {
+        for (let i = 0; i < selectedFiles.length; i++) {
+          formData.append("attachments", selectedFiles[i])
+        }
+      }
+
+      console.log("FormData before sending CHAT message:", formData) // Log FormData for chat
+
+      // Log FormData content (for deeper inspection - remove in production)
+      for (const pair of formData.entries()) {
+        console.log(pair[0] + ", " + pair[1])
       }
 
       try {
-        const response = await apiClient("/message/messages", "POST", {
-          ...payload,
-          messageType: "chat",
-        })
+        const response = await apiClient("/message/messages", "POST", formData)
         console.log("Chat message send response:", response)
       } catch (error) {
         console.error("Error sending chat message:", error)
       }
       setMessageText("")
+      setFiles(null) // Clear selected files after sending
     } else if (messageType === "email") {
       if (!message?.userId || !userId || !messageText.trim() || !subject?.trim()) {
         return
       }
 
+      const formData = new FormData() // Create FormData for email
+      formData.append("senderId", userId)
+      formData.append("receiverId", message.userId)
+      formData.append("messageType", "email") // Ensure messageType is 'email'
+      formData.append("subject", subject.trim())
+      formData.append("text", messageText.trim())
+
+      if (selectedFiles) {
+        for (let i = 0; i < selectedFiles.length; i++) {
+          formData.append("attachments", selectedFiles[i])
+        }
+      }
+
+      console.log("FormData before sending EMAIL message:", formData)
+
+      for (const pair of formData.entries()) {
+        console.log(pair[0] + ", " + pair[1])
+      }
+
+      try {
+        const response = await apiClient("/message/messages", "POST", formData)
+        console.log("Email send response:", response)
+      } catch (error) {
+        console.error("Error sending email:", error)
+      }
+
       setMessageText("")
+      setFiles(null) // Clear selected files after sending
     } else if (messageType === "sms") {
       if (
         !message?.userId ||
@@ -549,6 +640,11 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
     }
     setIsCalling(false)
     setDialogOpen(false)
+    socket?.emit("hangUp", {
+      // Optional chaining here
+      receiverId: message?.userId,
+      callerId: userId, // or current userId
+    })
   }
 
   return (
@@ -603,6 +699,8 @@ export function MessageDisplay({ message, userId }: MessageDisplayProps) {
           handleSendMessage={handleSendMessage}
           message={message}
           messageFilter={messageFilter}
+          setFiles={setFiles}
+          files={files}
         />
       )}
 

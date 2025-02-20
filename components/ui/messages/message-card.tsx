@@ -44,8 +44,8 @@ export const MessageCard: React.FC<MessageCardProps> = ({
 
   return (
     <div className="mt-6 flex flex-col gap-4 overflow-auto">
-      {filteredMessages.map((msg) => (
-        <div key={msg.id}>
+      {filteredMessages.map((msg, index) => (
+        <div key={index}>
           {msg.messageType === "email" && messageFilter === "email" ? (
             <div
               className={`relative flex ${msg.isSender ? "ml-auto justify-end" : "justify-start"}`}
@@ -66,21 +66,49 @@ export const MessageCard: React.FC<MessageCardProps> = ({
                           <p className="font-bold">{msg.subject}</p>
                         </div>
                       ) : (
-                        <div className="flex flex-row items-center gap-2">
+                        <div className="flex flex-row items-center justify-start gap-2">
                           <p className="font-bold">{msg.subject}</p>
                         </div>
                       )}
-                      <p className="line-clamp-2">{msg.text.substring(0, 300)}</p>
+                      {msg.isSender ? (
+                        <div className="flex flex-row items-center justify-end gap-2">
+                          <p className="line-clamp-2">{msg.text.substring(0, 300)}</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-row items-center justify-start gap-2">
+                          <p className="line-clamp-2">{msg.text.substring(0, 300)}</p>
+                        </div>
+                      )}
+
                       {msg.isSender ? (
                         <div className="flex flex-row items-center justify-end gap-2 text-end text-xs text-muted-foreground">
                           {formatDateDisplay(msg.date)}
                           <MailIcon className="h-4 w-4 text-blue-600" />
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="flex flex-row items-center justify-start gap-2 text-end text-xs text-muted-foreground">
                           <MailIcon className="h-4 w-4 text-blue-600" />
                           {formatDateDisplay(msg.date)}
                         </span>
+                      )}
+                      {/* Display Attachments for Email Preview */}
+                      {msg.attachments && msg.attachments.length > 0 && (
+                        <div className="mt-2">
+                          <h4 className="mb-1 text-xs font-semibold">Attachments:</h4>
+                          <ul className="list-disc pl-5">
+                            {msg.attachments.map((attachment, index) => (
+                              <li key={index} className="text-xs text-blue-500 hover:underline">
+                                <a
+                                  href={attachment.fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {attachment.filename}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       )}
                     </div>
                   </DialogTrigger>
@@ -95,6 +123,21 @@ export const MessageCard: React.FC<MessageCardProps> = ({
                     </DialogDescription>
                   </DialogHeader>
                   <div className="whitespace-pre-wrap py-4">{msg.text}</div>
+                  {/* Display Attachments in Full Email Dialog */}
+                  {msg.attachments && msg.attachments.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="mb-1 text-sm font-semibold">Attachments:</h4>
+                      <ul className="list-disc pl-5">
+                        {msg.attachments.map((attachment, index) => (
+                          <li key={index} className="text-sm text-blue-500 hover:underline">
+                            <a href={attachment.fileUrl} target="_blank" rel="noopener noreferrer">
+                              {attachment.filename}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <DialogFooter>
                     <Button>Reply</Button>
                     <Button variant="outline" onClick={() => setSelectedEmailMessage(null)}>
@@ -119,6 +162,21 @@ export const MessageCard: React.FC<MessageCardProps> = ({
                 ) : (
                   <div className="flex items-center gap-2">
                     <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
+                  </div>
+                )}
+                {/* Display Attachments for Chat Message */}
+                {msg.attachments && msg.attachments.length > 0 && (
+                  <div className="mt-2">
+                    <h4 className="mb-1 text-xs font-semibold">Attachments:</h4>
+                    <ul className="list-disc pl-5">
+                      {msg.attachments.map((attachment, index) => (
+                        <li key={index} className="text-xs text-blue-500 hover:underline">
+                          <a href={attachment.fileUrl} target="_blank" rel="noopener noreferrer">
+                            {attachment.filename}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
                 {msg.isSender ? (
