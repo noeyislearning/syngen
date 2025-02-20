@@ -3,6 +3,13 @@ import mongoose from "mongoose"
 import cors from "cors"
 import http from "http"
 import { Server, Socket } from "socket.io"
+import multer from "multer"
+import path from "path"
+import fs from "fs"
+
+import { fileURLToPath } from "url"
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 import type { SocketIdMap, MessagePayload } from "./lib/types"
 import { handleMessage } from "./controllers/message/send-message.controller"
@@ -25,11 +32,26 @@ const io = new Server(server, {
 })
 app.use(cors())
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, "uploads")
+    fs.mkdirSync(uploadDir, { recursive: true })
+    cb(null, uploadDir)
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
+    cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname))
+  },
+})
+
+const upload = multer({ storage: storage })
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 app.use("/api/v1/auth", authRoutes)
 app.use("/api/v1/user", userRoutes)
-app.use("/api/v1/message", messageRoutes)
+app.use("/api/v1/message", upload.fields([{ name: "attachments", maxCount: 10 }]), messageRoutes)
 
 mongoose
   .connect(MONGODB_URI!)

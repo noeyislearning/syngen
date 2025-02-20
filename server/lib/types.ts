@@ -52,9 +52,11 @@ export interface SendMessageRequest extends Request {
     messageType: "chat" | "email" | "sms"
     text: string
     subject?: string
-    senderNumber?: string | null
-    receiverNumber?: string | null
+    senderNumber?: string
+    receiverNumber?: string
   }
+  // Correct the files type to include both array and object forms
+  files?: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] } | undefined
 }
 export interface MessageDetail {
   id: string
@@ -88,4 +90,9 @@ export interface ISmsMessage {
   senderNumber: string
   receiverNumber: string
   _id?: string
+}
+export interface IAttachment {
+  filename: string
+  fileUrl: string
+  fileType?: string
 }

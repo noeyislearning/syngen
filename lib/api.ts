@@ -3,23 +3,32 @@ import { API_URL } from "./constants"
 export const apiClient = async (
   endpoint: string,
   method: "GET" | "POST" | "PUT" | "DELETE",
-  body?: Record<string, unknown>,
+  body?: Record<string, unknown> | FormData,
+  customHeaders?: HeadersInit,
 ) => {
   try {
     const accessToken = localStorage.getItem("accessToken")
 
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
+    let headers: HeadersInit = {} // Initialize as empty object
+
+    if (!(body instanceof FormData)) {
+      // Check if body is NOT FormData
+      headers["Content-Type"] = "application/json" // Only set for JSON bodies
     }
 
     if (accessToken) {
       headers["Authorization"] = `Bearer ${accessToken}`
     }
 
+    // Merge custom headers if provided, overwriting defaults if necessary
+    if (customHeaders) {
+      headers = { ...headers, ...customHeaders }
+    }
+
     const response = await fetch(`${API_URL}${endpoint}`, {
       method,
       headers,
-      body: body ? JSON.stringify(body) : null,
+      body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : null, // Don't stringify FormData
     })
 
     if (!response.ok) {

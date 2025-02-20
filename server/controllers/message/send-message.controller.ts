@@ -3,7 +3,7 @@ import { Socket, Server } from "socket.io"
 
 import ChatMessage from "../../models/message.model"
 
-import type { MessagePayload, SendMessageRequest, IMessage } from "../../lib/types"
+import type { MessagePayload, SendMessageRequest, IMessage, IAttachment } from "../../lib/types"
 
 export const handleMessage = async (
   socket: Socket,
@@ -38,6 +38,7 @@ export const handleMessage = async (
       text,
       timestamp: chatMessage.timestamp.toISOString(),
       messageType: messageType,
+      messageId: chatMessage._id.toString(),
     }
 
     if (receiverSocket) {
@@ -77,6 +78,9 @@ export const sendMessageController = async (
   try {
     const { senderId, receiverId, messageType, text, subject } = req.body
 
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined
+    const attachmentFiles = files?.attachments || []
+
     if (!senderId || !receiverId || !messageType || !text) {
       res.status(400).json({ message: "Missing required fields." })
       return
@@ -87,12 +91,34 @@ export const sendMessageController = async (
       return
     }
 
+    const attachments: IAttachment[] = [] // Initialize attachments array
+
+    if (attachmentFiles && attachmentFiles.length > 0) {
+      // Use attachmentFiles here
+      for (const file of attachmentFiles) {
+        // Iterate over attachmentFiles
+        // In a real production scenario, you would upload files to cloud storage here (e.g., AWS S3, Cloudinary).
+        // For this example, we'll just create placeholder file URLs assuming files are temporarily stored locally by multer.
+
+        // Placeholder URL - replace with actual URL from cloud storage or your file server in production
+        const fileUrl = `/uploads/${file.filename}` // Assuming 'uploads' is accessible as a static path if serving files locally
+
+        const attachment: IAttachment = {
+          filename: file.originalname,
+          fileUrl: fileUrl,
+          fileType: file.mimetype, // You can also store MIME type if needed
+        }
+        attachments.push(attachment)
+      }
+    }
+
     const newMessage: IMessage = new ChatMessage({
       senderId,
       receiverId,
       messageType,
       text,
       subject: messageType === "email" ? subject : undefined,
+      attachments: attachments, // Add attachments array to the message
     })
 
     await newMessage.save()
@@ -104,6 +130,45 @@ export const sendMessageController = async (
         { senderId, receiverId, text },
         messageType,
       )
+    } else if (messageType === "email") {
+      // For email, we are now emitting a separate 'emailSaved' event.
+      console.log("Email message saved. Emitting 'emailSaved' socket event.")
+      const io = req.app.get("io") as Server
+      const socketIdMap = io.of("/").sockets
+
+      const receiverSocket = Array.from(socketIdMap.values()).find(
+        (s: Socket) => s.handshake.query.userId === receiverId,
+      )
+      const senderSocket = Array.from(socketIdMap.values()).find(
+        (s: Socket) => s.handshake.query.userId === senderId,
+      )
+
+      // Include attachments in emitPayload
+      const emitPayload = {
+        senderId,
+        receiverId,
+        text,
+        subject,
+        timestamp: newMessage.timestamp.toISOString(),
+        messageType: messageType,
+        messageId: newMessage._id.toString(),
+        attachments: attachments, // Include attachments in payload
+      }
+
+      if (receiverSocket) {
+        console.log(
+          `Server Emitting to receiver (socketId): ${receiverSocket.id} for 'emailSaved' payload:`,
+          emitPayload,
+        )
+        receiverSocket.emit("emailSaved", emitPayload)
+      }
+      if (senderSocket) {
+        console.log(
+          `Server Emitting to sender (socketId): ${senderSocket.id} for 'emailSaved' payload:`,
+          emitPayload,
+        )
+        senderSocket.emit("emailSaved", emitPayload)
+      }
     }
 
     res.status(201).json({ message: "Message sent and saved.", messageId: newMessage._id })

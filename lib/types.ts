@@ -78,6 +78,13 @@ export interface UserProviderProps {
 /**
  * Messages
  */
+export interface IAttachment {
+  // Interface for Attachments
+  filename: string
+  fileUrl: string
+  fileType?: string
+}
+
 export interface MessageDetailProps {
   id: string
   messageType: string
@@ -86,6 +93,7 @@ export interface MessageDetailProps {
   text: string
   date: string
   isSender: boolean
+  attachments?: IAttachment[]
 }
 export interface MessageTypeProps {
   userId: string
