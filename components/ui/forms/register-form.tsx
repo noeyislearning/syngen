@@ -71,7 +71,7 @@ export const RegisterForm: React.FC<AuthFormProps> = ({ handleToggleSignUp }) =>
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
         <div className="flex flex-col items-center gap-2">
           <h1 className="text-xl font-bold">Syngen.</h1>
           <div className="text-center text-sm">
