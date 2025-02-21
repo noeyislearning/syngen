@@ -9,18 +9,16 @@ export const apiClient = async (
   try {
     const accessToken = localStorage.getItem("accessToken")
 
-    let headers: HeadersInit = {} // Initialize as empty object
+    let headers: HeadersInit = {}
 
     if (!(body instanceof FormData)) {
-      // Check if body is NOT FormData
-      headers["Content-Type"] = "application/json" // Only set for JSON bodies
+      headers["Content-Type"] = "application/json"
     }
 
     if (accessToken) {
       headers["Authorization"] = `Bearer ${accessToken}`
     }
 
-    // Merge custom headers if provided, overwriting defaults if necessary
     if (customHeaders) {
       headers = { ...headers, ...customHeaders }
     }
@@ -28,7 +26,7 @@ export const apiClient = async (
     const response = await fetch(`${API_URL}${endpoint}`, {
       method,
       headers,
-      body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : null, // Don't stringify FormData
+      body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : null,
     })
 
     if (!response.ok) {
@@ -50,6 +48,5 @@ export const apiClient = async (
     return await response.json()
   } catch (error) {
     console.error("API Client Error:", error)
-    throw error
   }
 }
