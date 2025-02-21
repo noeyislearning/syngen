@@ -31,11 +31,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setIsLoading(true)
     try {
       const response = await apiClient("/user/profile", "GET")
+
       if (response) {
+        const responseData = await response.json()
+
         const userDataFromApi: UserProps = {
-          userId: response._id,
-          email: response.email,
-          phoneNumber: response.phoneNumber,
+          userId: responseData._id,
+          email: responseData.email,
+          phoneNumber: responseData.phoneNumber,
         }
         setUser(userDataFromApi)
         localStorage.setItem("user", JSON.stringify(userDataFromApi))

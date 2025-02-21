@@ -41,9 +41,15 @@ export const LoginForm: React.FC<AuthFormProps> = ({ handleToggleSignUp }) => {
 
     try {
       const response = await apiClient("/auth/login", "POST", values)
-      localStorage.setItem("accessToken", response.tokens.access)
-      localStorage.setItem("refreshToken", response.tokens.refresh)
-      const userData: UserProps = { userId: response.userId, email: values.email, phoneNumber: "" }
+      const responseData = await response.json()
+
+      localStorage.setItem("accessToken", responseData.tokens.access)
+      localStorage.setItem("refreshToken", responseData.tokens.refresh)
+      const userData: UserProps = {
+        userId: responseData.userId,
+        email: values.email,
+        phoneNumber: "",
+      }
       login(userData)
       router.push("/message")
     } catch (error) {
@@ -59,7 +65,7 @@ export const LoginForm: React.FC<AuthFormProps> = ({ handleToggleSignUp }) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-2">
           <h1 className="text-xl font-bold">Syngen.</h1>
           <div className="text-center text-sm">

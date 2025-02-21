@@ -26,7 +26,7 @@ export const apiClient = async (
     const response = await fetch(`${API_URL}${endpoint}`, {
       method,
       headers,
-      body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : null,
+      body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : null, // Don't stringify FormData
     })
 
     if (!response.ok) {
@@ -45,8 +45,9 @@ export const apiClient = async (
       throw new Error(errorMessage)
     }
 
-    return await response.json()
+    return response
   } catch (error) {
     console.error("API Client Error:", error)
+    throw error
   }
 }
