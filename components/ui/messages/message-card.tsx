@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { MailIcon, MessageSquareIcon, PhoneIcon } from "lucide-react" // Import PhoneIcon for SMS
+import { MailIcon, MessageSquareIcon, PhoneIcon } from "lucide-react"
 import {
   Button,
   Dialog,
@@ -164,7 +164,6 @@ export const MessageCard: React.FC<MessageCardProps> = ({
                     <p className="whitespace-pre-wrap text-sm">{msg.text}</p>
                   </div>
                 )}
-                {/* Display Attachments for Chat Message */}
                 {msg.attachments && msg.attachments.length > 0 && (
                   <div className="mt-2">
                     <h4 className="mb-1 text-xs font-semibold">Attachments:</h4>
@@ -192,7 +191,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
                 )}
               </div>
             </div>
-          ) : msg.messageType === "sms" && messageFilter === "sms" ? ( // ADDED SMS RENDERING LOGIC HERE
+          ) : msg.messageType === "sms" && messageFilter === "sms" ? (
             <div
               key={msg.id}
               className={`flex w-fit max-w-fit ${

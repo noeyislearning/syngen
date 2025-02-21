@@ -19,7 +19,7 @@ import {
 interface VoiceCallProps {
   receiverName?: string | null
   receiverPhoneNumber?: string | null
-  onCallInitiate: () => void // Modified onCallInitiate type
+  onCallInitiate: () => void
   socket: ReturnType<typeof io> | null
   dialogOpen: boolean
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>
@@ -35,7 +35,7 @@ export const VoiceCall: React.FC<VoiceCallProps> = ({
 }) => {
   const handleCallButtonClick = () => {
     if (socket) {
-      onCallInitiate() // Call onCallInitiate directly
+      onCallInitiate()
     } else {
       console.error("Socket is not initialized, cannot initiate call.")
       setDialogOpen(false)
@@ -66,11 +66,7 @@ export const VoiceCall: React.FC<VoiceCallProps> = ({
             <Button type="button" variant="outline" asChild>
               <DialogClose>Cancel</DialogClose>
             </Button>
-            <Button
-              type="submit"
-              onClick={handleCallButtonClick} // Use direct function call
-              variant="default"
-            >
+            <Button type="submit" onClick={handleCallButtonClick} variant="default">
               Call
             </Button>
           </DialogFooter>
@@ -80,7 +76,6 @@ export const VoiceCall: React.FC<VoiceCallProps> = ({
   )
 }
 
-// VoiceCallUI Component
 interface VoiceCallUIProps {
   onHangUp: () => void
   isMuted: boolean
