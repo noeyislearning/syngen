@@ -35,15 +35,13 @@ export const callController = (io: Server, socketIdMap: SocketIdMap) => {
       if (callerSocketId) {
         console.log(`Forwarding answer from ${socket.handshake.query.userId} to ${data.callerId}`)
         socket.to(callerSocketId).emit("answer", {
-          // Changed to 'answer' event
-          answer: data.answer, // Changed from 'signal' to 'answer'
+          answer: data.answer,
           calleeId: socket.handshake.query.userId,
         })
       }
     },
 
     handleRejectCall: (socket: Socket, data: CallData & { calleeId?: string }) => {
-      // Include calleeId in type
       const callerSocketId = socketIdMap[data.callerId]
       if (callerSocketId) {
         console.log(
@@ -102,7 +100,6 @@ export const callController = (io: Server, socketIdMap: SocketIdMap) => {
       }
       const callerSocketId = socketIdMap[data.callerId]
       if (callerSocketId) {
-        // Forward the answer payload exactly as received
         socket.to(callerSocketId).emit("answer", data)
         console.log(`Forwarded answer from ${data.calleeId} to ${data.callerId}`)
       } else {

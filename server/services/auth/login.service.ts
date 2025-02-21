@@ -7,7 +7,6 @@ export const loginService = async (
   email: string,
   password: string,
 ): Promise<{ message: string; tokens: { access: string; refresh: string } }> => {
-  // Updated return type annotation
   if (!email || !password) {
     throw new Error("Email and password are required.")
   }

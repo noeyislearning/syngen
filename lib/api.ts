@@ -26,7 +26,7 @@ export const apiClient = async (
     const response = await fetch(`${API_URL}${endpoint}`, {
       method,
       headers,
-      body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : null, // Don't stringify FormData
+      body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : null,
     })
 
     if (!response.ok) {

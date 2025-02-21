@@ -5,7 +5,7 @@ import type { IMessage, IAttachment } from "../lib/types"
 const attachmentSchema: Schema<IAttachment> = new Schema({
   filename: { type: String, required: true },
   fileUrl: { type: String, required: true },
-  fileType: { type: String }, // Optional: MIME type
+  fileType: { type: String },
 })
 
 const chatMessageSchema: Schema = new Schema(

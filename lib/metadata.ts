@@ -1,13 +1,14 @@
 import { Metadata } from "next"
 
 const siteName = "Syngen"
-const siteURL = "https://syngen.io" // Example URL
-const siteDescription = " Building a fully functional omni-channel communication app. Explore the implementation of features to support various communication channels in a cohesive and integrated manner."
+const siteURL = "https://syngen.io"
+const siteDescription =
+  " Building a fully functional omni-channel communication app. Explore the implementation of features to support various communication channels in a cohesive and integrated manner."
 
 export const metadata: Metadata = {
   title: {
     default: siteName,
-    template:  "%s | " + siteName,
+    template: "%s | " + siteName,
   },
   description: siteDescription,
   generator: siteName,
@@ -19,6 +20,6 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
     siteName: siteName,
-    countryName: "Philippines"
-  }
+    countryName: "Philippines",
+  },
 }

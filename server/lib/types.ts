@@ -55,7 +55,6 @@ export interface SendMessageRequest extends Request {
     senderNumber?: string
     receiverNumber?: string
   }
-  // Correct the files type to include both array and object forms
   files?: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] } | undefined
 }
 export interface MessageDetail {

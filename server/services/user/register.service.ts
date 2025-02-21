@@ -16,7 +16,6 @@ export const registerService = async (
     errors.password = "Password is required"
   }
   if (!phoneNumber) {
-    // ADDED PHONE NUMBER VALIDATION
     errors.phoneNumber = "Phone number is required"
   }
 
