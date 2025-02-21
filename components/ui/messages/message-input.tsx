@@ -11,12 +11,12 @@ interface MessageInputProps {
     e: React.FormEvent,
     messageType: string,
     subject?: string,
-    files?: FileList | null, // Add files as optional parameter
-  ) => Promise<void> // Changed return type to Promise<void> to match handleSendMessage in MessageDisplay
+    files?: FileList | null,
+  ) => Promise<void>
   message: MessageTypeProps | null
   messageFilter: string
-  setFiles: React.Dispatch<React.SetStateAction<FileList | null>> // Add setFiles prop to MessageInputProps
-  files: FileList | null // Add files prop to MessageInputProps
+  setFiles: React.Dispatch<React.SetStateAction<FileList | null>>
+  files: FileList | null
 }
 
 export const MessageInput: React.FC<MessageInputProps> = ({
@@ -25,35 +25,34 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   handleSendMessage,
   message,
   messageFilter,
-  setFiles, // Destructure setFiles prop
-  files, // Destructure files prop
+  setFiles,
+  files,
 }) => {
   const [subject, setSubject] = React.useState("")
-  const [selectedFiles, setSelectedFiles] = React.useState<FileList | null>(files) // Initialize selectedFiles with files prop, and remove useState and use prop directly instead
+  const [selectedFiles, setSelectedFiles] = React.useState<FileList | null>(files)
 
   React.useEffect(() => {
-    setSelectedFiles(files) // Keep the selected files state in sync with the prop
+    setSelectedFiles(files)
   }, [files])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    // Make handleSubmit async to handle Promise return of handleSendMessage
     e.preventDefault()
     if (messageFilter === "email") {
-      await handleSendMessage(e, "email", subject, selectedFiles) // Pass files to handleSendMessage and await the promise
+      await handleSendMessage(e, "email", subject, selectedFiles)
     } else if (messageFilter === "chat") {
-      await handleSendMessage(e, "chat", undefined, selectedFiles) // Pass files for chat as well and await the promise
+      await handleSendMessage(e, "chat", undefined, selectedFiles)
     } else if (messageFilter === "sms") {
-      await handleSendMessage(e, "sms") // Await the promise for sms as well for consistency even if SMS doesn't use files now
+      await handleSendMessage(e, "sms")
     }
     setSubject("")
     setMessageText("")
-    setFiles(null) // Clear selected files after sending using setFiles prop
-    setSelectedFiles(null) // Also clear local selectedFiles state for consistency - although prop should be source of truth now
+    setFiles(null)
+    setSelectedFiles(null)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedFiles(e.target.files) // Update local selectedFiles state
-    setFiles(e.target.files) // Update files state in parent component via setFiles prop
+    setSelectedFiles(e.target.files)
+    setFiles(e.target.files)
   }
 
   return (
