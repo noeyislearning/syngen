@@ -44,7 +44,7 @@ export const RegisterForm: React.FC<AuthFormProps> = ({ handleToggleSignUp }) =>
 
     try {
       const response = await apiClient("/user/register", "POST", payload)
-      const userData: UserProps = { userId: response.userId, email: values.email }
+      const userData: UserProps = { userId: response.userId, email: values.email, phoneNumber: "" }
       login(userData)
       router.push("/")
     } catch (err: unknown) {

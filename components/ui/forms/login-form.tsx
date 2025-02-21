@@ -43,7 +43,7 @@ export const LoginForm: React.FC<AuthFormProps> = ({ handleToggleSignUp }) => {
       const response = await apiClient("/auth/login", "POST", values)
       localStorage.setItem("accessToken", response.tokens.access)
       localStorage.setItem("refreshToken", response.tokens.refresh)
-      const userData: UserProps = { userId: response.userId, email: values.email }
+      const userData: UserProps = { userId: response.userId, email: values.email, phoneNumber: "" }
       login(userData)
       router.push("/message")
     } catch (error) {

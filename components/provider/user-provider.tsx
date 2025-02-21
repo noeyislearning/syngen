@@ -13,11 +13,32 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const login = (userData: UserProps) => {
     setUser(userData)
     localStorage.setItem("user", JSON.stringify(userData))
+    fetchUserData()
   }
 
   const logout = () => {
     setUser(null)
     localStorage.removeItem("user")
+  }
+
+  const fetchUserData = async () => {
+    setIsLoading(true)
+    try {
+      const response = await apiClient("/user/profile", "GET")
+      const userDataFromApi: UserProps = {
+        userId: response._id,
+        email: response.email,
+        phoneNumber: response.phoneNumber,
+      }
+      setUser(userDataFromApi)
+      localStorage.setItem("user", JSON.stringify(userDataFromApi))
+    } catch (error) {
+      console.error("Error fetching user data:", error)
+      setUser(null)
+      localStorage.removeItem("user")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   React.useEffect(() => {
@@ -51,16 +72,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       } catch (error) {
         console.error("Error parsing stored user data:", error)
         localStorage.removeItem("user")
-        fetchUserData()
-      } finally {
-        if (!storedUser) {
-          fetchUserData()
-        } else {
-          setIsLoading(false)
-        }
+        setIsLoading(false)
       }
     } else {
-      fetchUserData()
+      setIsLoading(false)
     }
   }, [])
 
