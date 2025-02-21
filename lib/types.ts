@@ -71,6 +71,7 @@ export interface UserContextProps {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
   login: (userData: UserProps) => void
   logout: () => void
+  isLoggingOut: boolean
 }
 export interface UserProviderProps {
   children: React.ReactNode
