@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
 import { LogOut } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -15,11 +14,9 @@ interface AccountSwitcherProps {
 
 export function AccountSwitcher({ isCollapsed, userEmail }: AccountSwitcherProps) {
   const { logout } = useUser()
-  const router = useRouter()
 
   const handleLogout = () => {
     logout()
-    router.push("/")
   }
 
   const handleValueChange = (value: string) => {

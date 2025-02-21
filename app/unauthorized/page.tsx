@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/shared/"
 
-export const Unauthorized = () => {
+export default function UnauthorizedPage() {
   const router = useRouter()
   const handleGoBack = () => {
     router.push("/")

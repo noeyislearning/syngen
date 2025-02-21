@@ -9,17 +9,22 @@ import { MessageTypeProps } from "@/lib/types"
 
 import { Card } from "@/components/shared/"
 import { Message } from "@/components/ui/messages/message"
-import { Unauthorized } from "@/components/ui/unathorized"
 
 export default function MessagePage() {
-  const { user, isLoading } = useUser()
+  const { user, isLoading, isLoggingOut } = useUser()
   const router = useRouter()
   const [messages, setMessages] = React.useState<MessageTypeProps[]>([])
   const [fetchLoading, setFetchLoading] = React.useState(false)
   const [fetchError, setFetchError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
-    if (isLoading || !user) {
+    if (isLoading) {
+      console.log("MessagePage: useEffect - isLoading is true, returning") // ADD THIS LINE
+      return
+    }
+
+    if (!user && !isLoggingOut) {
+      router.push("/unauthorized")
       return
     }
 
@@ -43,10 +48,10 @@ export default function MessagePage() {
     }
 
     fetchMessages()
-  }, [user, isLoading, router])
+  }, [user, isLoading, router, isLoggingOut])
 
-  if (isLoading || !user) {
-    return <Unauthorized />
+  if (isLoading) {
+    return null
   }
 
   return (
@@ -58,7 +63,7 @@ export default function MessagePage() {
         </div>
       )}
       {fetchLoading ? (
-        <div className="flex min-h-svh items-center justify-center">Loading messages...</div>
+        <div className="flex min-h-svh items-center justify-center"></div>
       ) : (
         <Message messages={messages} navCollapsedSize={4} />
       )}
