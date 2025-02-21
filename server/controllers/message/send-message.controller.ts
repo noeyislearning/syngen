@@ -21,7 +21,6 @@ export const handleMessage = async (
       text,
       messageType: messageType,
     })
-    await chatMessage.save()
 
     const socketIdMap = io.of("/").sockets
 
@@ -91,22 +90,16 @@ export const sendMessageController = async (
       return
     }
 
-    const attachments: IAttachment[] = [] // Initialize attachments array
+    const attachments: IAttachment[] = []
 
     if (attachmentFiles && attachmentFiles.length > 0) {
-      // Use attachmentFiles here
       for (const file of attachmentFiles) {
-        // Iterate over attachmentFiles
-        // In a real production scenario, you would upload files to cloud storage here (e.g., AWS S3, Cloudinary).
-        // For this example, we'll just create placeholder file URLs assuming files are temporarily stored locally by multer.
-
-        // Placeholder URL - replace with actual URL from cloud storage or your file server in production
-        const fileUrl = `/uploads/${file.filename}` // Assuming 'uploads' is accessible as a static path if serving files locally
+        const fileUrl = `/uploads/${file.filename}`
 
         const attachment: IAttachment = {
           filename: file.originalname,
           fileUrl: fileUrl,
-          fileType: file.mimetype, // You can also store MIME type if needed
+          fileType: file.mimetype,
         }
         attachments.push(attachment)
       }
@@ -118,7 +111,7 @@ export const sendMessageController = async (
       messageType,
       text,
       subject: messageType === "email" ? subject : undefined,
-      attachments: attachments, // Add attachments array to the message
+      attachments: attachments,
     })
 
     await newMessage.save()
@@ -131,7 +124,6 @@ export const sendMessageController = async (
         messageType,
       )
     } else if (messageType === "email") {
-      // For email, we are now emitting a separate 'emailSaved' event.
       console.log("Email message saved. Emitting 'emailSaved' socket event.")
       const io = req.app.get("io") as Server
       const socketIdMap = io.of("/").sockets
@@ -143,7 +135,6 @@ export const sendMessageController = async (
         (s: Socket) => s.handshake.query.userId === senderId,
       )
 
-      // Include attachments in emitPayload
       const emitPayload = {
         senderId,
         receiverId,
@@ -152,7 +143,7 @@ export const sendMessageController = async (
         timestamp: newMessage.timestamp.toISOString(),
         messageType: messageType,
         messageId: newMessage._id.toString(),
-        attachments: attachments, // Include attachments in payload
+        attachments: attachments,
       }
 
       if (receiverSocket) {
